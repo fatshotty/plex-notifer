@@ -2,6 +2,8 @@ const {Config} = require('./utils');
 const Telegram = require('slimbot');
 
 const Slimbot = new Telegram(Config.TELEGRAM_BOT_ID);
+const SlimbotLog = new Telegram(Config.TELEGRAM_LOG_BOT_ID);
+
 
 let queue = [];
 let FREE = true;
@@ -39,7 +41,7 @@ function _send(posterUrl, html) {
       caption: html
     };
     if ( !posterUrl ) {
-      method = 'sendMessage';
+      method = 'sendPhoto';
       delete opts.caption;
       posterUrl = html;
     }
@@ -49,7 +51,12 @@ function _send(posterUrl, html) {
         setTimeout( resolve, 5000);
       })
       .catch( (e) => {
-        console.log(`[ERROR telegram] ${e.message}`);
+        console.log(`[ERROR telegram] ${title} ${!isUrl ? '(buff)' : ''} - ${e.message}`);
+        SlimbotLog.sendMessage(Config.TELEGRAM_LOG_CHAT_ID, `[Noty-Error] ${title} ${!isUrl ? '(buff)' : ''} - ${e.message}`, {
+          parse_mode: "html",
+          disable_web_page_preview: false,
+          disable_notification: false
+        });
         resolve();
       });
   })
