@@ -1,3 +1,6 @@
+
+console.log(`****** STARTING UP ${Date.now()} ******`);
+
 const {Config, saveConfig} = require('./utils');
 const {PlexQuery} = require('./plex');
 const Job = require('./job');
