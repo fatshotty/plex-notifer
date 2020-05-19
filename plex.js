@@ -58,6 +58,8 @@ class PlexLibrary {
 
       let items = MediaContainer.Metadata || [];
 
+      items = this.remapData( items );
+
       return items.filter( (item) => {
 
         return item.addedAt > this.LastScan; // && item.key == '/library/metadata/42317';
@@ -72,6 +74,38 @@ class PlexLibrary {
 
   itemDetails(item) {
     return PlexQuery(`${item.key}`);
+  }
+
+  remapData( items ) {
+    if ( this.Type != 'show' ) {
+      return items;
+    }
+
+
+    let res = {};
+    for ( let item of items ) {
+
+      let show = res[ item.grandparentTitle ];
+      if ( !show ) {
+        show = res[ item.grandparentTitle ] = JSON.parse( JSON.stringify(item) ); // duplicate item
+        show.Seasons = {};
+        show.Media = [];
+      }
+
+      show.Seasons[ item.parentTitle ] = item.year
+      show.Media = show.Media.concat( item.Media );
+
+      show.addedAt = Math.max( show.addedAt, item.addedAt );
+    }
+
+    let shows = Object.values(res);
+
+    for ( let show of shows ) {
+      show.title = show.grandparentTitle;
+      show.year = Object.values(show.Seasons).sort( (y1, y2) => y1 > y2 ? 1 : -1 )[0];
+    }
+
+    return shows;
   }
 
 

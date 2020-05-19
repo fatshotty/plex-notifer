@@ -1,3 +1,4 @@
 module.exports = {
-  Movie: require('./movie')
+  movie: require('./movie'),
+  show: require('./show')
 };

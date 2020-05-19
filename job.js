@@ -77,19 +77,21 @@ class Job extends EventEmitter {
 
       let ps = [];
       let _scraper = 'TMDB';
+      let _scraper_type = 'movie';
 
-      if ( this.plexlibrary.Type !== 'movie' ) {
+      if ( this.plexlibrary.Type == 'show' ) {
         _scraper = 'TVDB';
+        _scraper_type = 'tv';
       }
 
       for ( let plexItem of items ) {
         console.log(`${this.JobName} scraping ${plexItem.title} (${plexItem.year}) via ${_scraper} (addedAt: ${plexItem.addedAt})`);
         ps.push( new Promise( (resolve, reject) => {
-          Scraper[ _scraper ].search(plexItem.title, plexItem.year).then( (tmdbData) => {
+          Scraper[ _scraper ].search(plexItem.title, plexItem.year, _scraper_type).then( (tmdbData) => {
               let results = tmdbData.results;
               let first = results[0];
               if ( first ) {
-                Scraper[ _scraper ].getInfo(first.id).then( (klass) => {
+                Scraper[ _scraper ].getInfo(first.id, _scraper_type).then( (klass) => {
                   resolve( {scraped: klass, plexItem} );
                 }).catch( (e) => {
                   console.error(`[ERROR ${_scraper}-info-${this.plexlibrary.Key}] ${this.JobName} ${e.message} [${plexItem.title} (${plexItem.year})]`);
@@ -123,7 +125,7 @@ class Job extends EventEmitter {
         };
         try {
           console.log(`${this.JobName} try to notify - ${obj.scraped.Name || item.plexItem.title}`);
-          let compiledTemplate = Templates.Movie(obj, this.plexlibrary.Name);
+          let compiledTemplate = Templates[this.plexlibrary.Type](obj, this.plexlibrary.Name);
           ps.push(  compiledTemplate ); // Promise.resolve({poster: obj.scraped.Poster, html: compiledTemplate}) );
         } catch( e ) {
           console.log(`[ERROR pug] ${this.JobName} ${e.message}`);
