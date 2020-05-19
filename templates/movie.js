@@ -1,3 +1,6 @@
+const Path = require('path');
+const {Config} = require('../utils');
+
 function formatBytes(bytes, decimals = 2) {
   if (bytes === 0) return '0 Bytes';
 
@@ -8,6 +11,43 @@ function formatBytes(bytes, decimals = 2) {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
 
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+}
+
+
+function extractMediaData(media) {
+
+  let videoRes = media.videoResolution;
+  let audioCh = media.audioChannels;
+
+  let filename = media.Part && media.Part[0].file;
+
+  filename = Path.basename( filename );
+
+  let lastIndex = filename.lastIndexOf('-');
+  let details = filename.substring(lastIndex + 1).trim();
+
+
+  details = details.substring(0, details.lastIndexOf('.') );
+  details = details.split(' ');
+
+  // 1080p x265 AC3 5.1 9.3GB.mkv
+
+  // remove dimension
+  details.pop();
+
+  try {
+    audioCh = parseFloat(audioCh || details.pop()).toFixed(1);
+
+    videoRes = videoRes || details.shift();
+    if ( isNaN( Number(videoRes.charAt(0) ) )  ) {
+      videoRes = details.shift();
+    }
+
+  } catch(e) {
+    console.error(`cannot extract mediadata from ${filename} - ${e.message}` );
+  }
+
+  return {videoRes, audioCh};
 }
 
 
@@ -56,6 +96,9 @@ module.exports = function(scraped, plexItem, library) {
     }
   }
 
+  let mediaData = plexItem.Media.map( extractMediaData );
+  let resolution = mediaData.map( res => res.videoRes ).filter( res => !!res ).join(' / ');
+  let audioCh = mediaData.map( res => res.audioCh ).filter( res => !!res ).join(' / ');
 
   let str = [
     `🎬 <b>${scraped.Title || plexItem.title}</b>`,
@@ -65,13 +108,14 @@ module.exports = function(scraped, plexItem, library) {
     director ? `<b>Regia:</b> ${director}` : 'NO',
     cast ? `<b>Cast:</b> ${cast}` : 'NO',
     '',
-    `<b>Risoluzione:</b> ${[... (new Set( plexItem.Media.map(m => m.videoResolution).filter(vr => !!vr) )) ].join(' / ')}`,
-    `<b>Canali Audio:</b> ${[... (new Set( plexItem.Media.map(m => m.audioChannels).filter(ac => !!ac) )) ].join(' / ')}`,
+    resolution ? `<b>Risoluzione:</b> ${[... (new Set( plexItem.Media.map(m => m.videoResolution).filter(vr => !!vr) )) ].join(' / ')}` : 'NO',
+    audioCh ? `<b>Canali Audio:</b> ${[... (new Set( plexItem.Media.map(m => m.audioChannels).filter(ac => !!ac) )) ].join(' / ')}` : 'NO',
     `<b>Dimensione:</b> ${[... (new Set( plexItem.Media.map(m => m.Part && m.Part[0] && m.Part[0].size).filter(s => !!s).map(formatBytes)) ) ].join(' / ')}`,
     '',
     summary ? summary : 'NO',
     '',
-    imdb_link ? imdb_link : 'NO'
+    imdb_link ? imdb_link : 'NO',
+    Config.PC_NAME ? `- ${Config.PC_NAME} -` : 'NO'
   ]
 
   return str.filter(row => row != 'NO').join('\n');

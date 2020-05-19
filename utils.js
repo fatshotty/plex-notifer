@@ -25,6 +25,8 @@ const Config = {
 
   IMMEDIATE: process.env.IMMEDIATE == 'true',
 
+  PC_NAME: process.env.PC_NAME,
+
   ConfigFile: {}
 };
 

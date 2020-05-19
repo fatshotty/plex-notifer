@@ -83,7 +83,7 @@ class Job extends EventEmitter {
       }
 
       for ( let plexItem of items ) {
-        console.log(`${this.JobName} scraping ${plexItem.title} (${plexItem.year}) via ${_scraper}`);
+        console.log(`${this.JobName} scraping ${plexItem.title} (${plexItem.year}) via ${_scraper} (addedAt: ${item.addedAt})`);
         ps.push( new Promise( (resolve, reject) => {
           Scraper[ _scraper ].search(plexItem.title, plexItem.year).then( (tmdbData) => {
               let results = tmdbData.results;

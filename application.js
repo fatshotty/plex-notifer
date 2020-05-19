@@ -44,6 +44,7 @@ PlexQuery('/library/sections').then( (results) => {
     job.on('gotitems', (items) => {
       let item = items.slice(0).pop();
       if ( item ) {
+        console.log(`${job.JobName} report scanned from ${lib.lastScan} to ${item.addedAt}`);
         lib.lastScan = item.addedAt;
       }
     });
