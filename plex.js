@@ -71,9 +71,7 @@ class PlexLibrary {
 
 
   itemDetails(item) {
-    return PlexQuery(`${item.key}`).then( (data) => {
-
-    });
+    return PlexQuery(`${item.key}`);
   }
 
 
