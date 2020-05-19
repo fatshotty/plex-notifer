@@ -13,6 +13,10 @@ const TelegramBot = require('./telegram-bot');
 class Job extends EventEmitter {
 
 
+  get JobName() {
+    return `[${this.plexlibrary.Name} (${this.plexlibrary.Key})]`;
+  }
+
   constructor(options) {
     super();
     this.options = options;
@@ -25,7 +29,7 @@ class Job extends EventEmitter {
     this.plexlibrary = new PlexLibrary( this.options );
 
     this._job = new CronJob(
-      this.options.jobschedule,       // schedule
+      this.options.jobschedule,    // schedule
       this.execute.bind(this),     // onTick
       null,                        // onComplete
       false,                       // start
@@ -35,11 +39,11 @@ class Job extends EventEmitter {
 
 
   start() {
+    this._job.start();
+
     if ( Config.IMMEDIATE ) {
       console.log(`[WARN] job ${this.plexlibrary.Name} - ${this.plexlibrary.Key} will start now!`);
       this.execute();
-    } else {
-      this._job.start();
     }
   }
 
@@ -47,15 +51,17 @@ class Job extends EventEmitter {
   execute() {
 
     if ( this.isExecuting ) {
-      console.log(`job ${this.plexlibrary.Type} is already running, skipping`);
+      console.log(`${this.JobName} is already running, skipping`);
       return;
     }
 
     this.isExecuting = true;
 
+    console.log(`${this.JobName} job is starting...`);
+
     this.plexlibrary.filterRecentlyAdded().then( (items) => {
 
-      console.log(`${items.length} ${this.plexlibrary.Type} recently added`);
+      console.log(`${this.JobName} ${items.length} recently added`);
 
       this.emit('gotitems', items);
 
@@ -77,6 +83,7 @@ class Job extends EventEmitter {
       }
 
       for ( let plexItem of items ) {
+        console.log(`${this.JobName} scraping ${plexItem.title} (${plexItem.year}) via ${_scraper}`);
         ps.push( new Promise( (resolve, reject) => {
           Scraper[ _scraper ].search(plexItem.title, plexItem.year).then( (tmdbData) => {
               let results = tmdbData.results;
@@ -85,7 +92,7 @@ class Job extends EventEmitter {
                 Scraper[ _scraper ].getInfo(first.id).then( (klass) => {
                   resolve( {scraped: klass, plexItem} );
                 }).catch( (e) => {
-                  console.error(`[ERROR ${_scraper}-info-${this.plexlibrary.Key}] ${e.message} [${plexItem.title} (${plexItem.year})]`);
+                  console.error(`[ERROR ${_scraper}-info-${this.plexlibrary.Key}] ${this.JobName} ${e.message} [${plexItem.title} (${plexItem.year})]`);
                   resolve( {scraped: null, plexItem} );
                 })
               } else {
@@ -93,7 +100,7 @@ class Job extends EventEmitter {
                 resolve( {scraped: null, plexItem} );
               }
             }).catch( (e) => {
-              console.error(`[ERROR ${_scraper}-search-${this.plexlibrary.Key}] ${e.message} [${plexItem.title} (${plexItem.year})]`);
+              console.error(`[ERROR ${_scraper}-search-${this.plexlibrary.Key}] ${this.JobName} ${e.message} [${plexItem.title} (${plexItem.year})]`);
               resolve( {scraped: null, plexItem} );
             })
           })
@@ -115,10 +122,11 @@ class Job extends EventEmitter {
           scraped: item.scraped || {}
         };
         try {
+          console.log(`${this.JobName} try to notify [${this.plexlibrary.Name} (${this.plexlibrary.Key})] - ${obj.scraped.Name || item.plexItem.title}`);
           let compiledTemplate = Templates.Movie(obj.scraped, item.plexItem, this.plexlibrary.Name);
           ps.push(  Promise.resolve({poster: obj.scraped.Poster, html: compiledTemplate}) );
         } catch( e ) {
-          console.log(`[ERROR pug] ${e.message}`);
+          console.log(`[ERROR pug] ${this.JobName} ${e.message}`);
         }
 
       }
@@ -140,7 +148,7 @@ class Job extends EventEmitter {
 
         } else {
           ps.push( new Promise( (resolve, reject) => {
-            console.log(`**** ${this.plexlibrary.Key} `);
+            console.log(`**** ${this.JobName} `);
             console.log( template.html );
             resolve();
           }) )
@@ -172,9 +180,9 @@ class Job extends EventEmitter {
     if ( error ) {
       console.error(error);
 
-      console.log(`[ERROR] job finished with error ${error.message}`);
+      console.log(`[ERROR] ${this.JobName} job finished with error ${error.message}`);
     } else {
-      console.log(`job ${this.plexlibrary.Type} is successfully completed`);
+      console.log(`${this.JobName} job is successfully completed`);
     }
 
     this.emit('completed', error);
