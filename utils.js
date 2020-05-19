@@ -21,8 +21,14 @@ const Config = {
   TELEGRAM_BOT_ID: process.env.TELEGRAM_BOT_ID,
   TELEGRAM_CHAT_ID: process.env.TELEGRAM_CHAT_ID,
 
+  PLEX_SKIP_LIBRARY: (process.env.PLEX_SKIP_LIBRARY || '').split(',').map(l => l.trim()).filter(l => !!l),
+
+  IMMEDIATE: process.env.IMMEDIATE == 'true',
+
   ConfigFile: {}
 };
+
+
 
 if ( ! FS.existsSync(Config.TEMP_DIR) ) {
   console.log(`${Config.TEMP_DIR} doesn't exists, creating`);

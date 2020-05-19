@@ -22,11 +22,7 @@ class Job extends EventEmitter {
 
   init() {
 
-    this.plexlibrary = new PlexLibrary({
-      key: this.options.key,
-      lastScan: this.options.lastScan,
-      type: this.options.type
-    });
+    this.plexlibrary = new PlexLibrary( this.options );
 
     this._job = new CronJob(
       this.options.jobschedule,       // schedule
@@ -39,8 +35,12 @@ class Job extends EventEmitter {
 
 
   start() {
-    this._job.start();
-    // this.execute();
+    if ( Config.IMMEDIATE ) {
+      console.log(`[WARN] job ${this.plexlibrary.Name} - ${this.plexlibrary.Key} will start now!`);
+      this.execute();
+    } else {
+      this._job.start();
+    }
   }
 
 

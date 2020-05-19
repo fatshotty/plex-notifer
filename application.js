@@ -14,10 +14,16 @@ PlexQuery('/library/sections').then( (results) => {
 
   let directories = results.MediaContainer.Directory;
 
+  directories = directories.filter( (dir) => {
+    if ( Config.PLEX_SKIP_LIBRARY.indexOf(dir.key) > -1 ) {
+      console.log(`[WARN] Library [${dir.title} - ${dir.key}] has been marked for skip`);
+      return false;
+    }
+    return true;
+  })
+
   for ( let dir of directories ) {
-    if ( dir.key != 7 ) { continue; }
-    if ( dir.title == 'Musica' ) continue;
-    console.log(`found directory ${dir.key} - ${dir.title}`);
+    console.log(`Library [${dir.title} - ${dir.key}] will be processed`);
 
     let lib = libraries[ dir.title ];
     if ( !lib ) {
