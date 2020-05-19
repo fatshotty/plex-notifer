@@ -115,9 +115,9 @@ module.exports = function({scraped, plexItem}, library) {
 
   let cast = '';
   if ( scraped.Cast && scraped.Cast.length ) {
-    cast = scraped.Cast.slice(0, 3).join(', ');
+    cast = scraped.Cast.slice(0, 5).join(', ');
   } else if ( plexItem.Role && plexItem.Role.length ) {
-    cast = plexItem.Role.slice(0, 3).map( c => c.tag ).join(', ');
+    cast = plexItem.Role.slice(0, 5).map( c => c.tag ).join(', ');
   }
 
   let summary = '';
