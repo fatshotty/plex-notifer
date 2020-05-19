@@ -141,8 +141,13 @@ module.exports = function({scraped, plexItem}, library) {
   }
 
   let mediaData = plexItem.Media.map( extractMediaData );
-  let resolution = mediaData.map( res => res.videoRes ).filter( res => !!res ).join(' / ');
-  let audioCh = mediaData.map( res => res.audioCh ).filter( res => !!res ).join(' / ');
+  let resolution = mediaData.map( res => res.videoRes ).filter( res => !!res );
+  let audioCh = mediaData.map( res => res.audioCh ).filter( res => !!res );
+
+  resolution = [... (new Set( resolution ) ) ].join(' / ');
+  audioCh = [... (new Set( audioCh )  ) ].join(' / ');
+
+  let sizes = [... (new Set( plexItem.Media.map(m => m.Part && m.Part[0] && m.Part[0].size).filter(s => !!s).map(formatBytes)) ) ].join(' / ');
 
   // 🏅
 
@@ -154,9 +159,9 @@ module.exports = function({scraped, plexItem}, library) {
     director ? `<b>Regia:</b> ${director}` : 'NO',
     cast ? `<b>Cast:</b> ${cast}` : 'NO',
     '',
-    resolution ? `<b>Risoluzione:</b> ${[... (new Set( plexItem.Media.map(m => m.videoResolution).filter(vr => !!vr) )) ].join(' / ')}` : 'NO',
-    audioCh ? `<b>Canali Audio:</b> ${[... (new Set( plexItem.Media.map(m => m.audioChannels).filter(ac => !!ac) )) ].join(' / ')}` : 'NO',
-    `<b>Dimensione:</b> ${[... (new Set( plexItem.Media.map(m => m.Part && m.Part[0] && m.Part[0].size).filter(s => !!s).map(formatBytes)) ) ].join(' / ')}`,
+    resolution ? `<b>Risoluzione:</b> ${resolution}` : 'NO',
+    audioCh ? `<b>Canali Audio:</b> ${audioCh}` : 'NO',
+    `<b>Dimensione:</b> ${sizes}`,
     '',
     summary ? summary : 'NO',
     '',
