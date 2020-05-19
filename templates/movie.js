@@ -83,8 +83,8 @@ module.exports = function(scraped, plexItem, library) {
     summary = scraped.Description;
   }
 
-  if ( summary.length > 150 ) {
-    summary = `${summary.slice(0, 300)}...`;
+  if ( Config.PLOT_LIMIT && summary.length > Config.PLOT_LIMIT ) {
+    summary = `${summary.slice(0, Config.PLOT_LIMIT)}...`;
   }
 
   let imdb_link = '';

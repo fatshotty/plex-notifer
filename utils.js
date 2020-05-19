@@ -27,6 +27,8 @@ const Config = {
 
   PC_NAME: process.env.PC_NAME,
 
+  PLOT_LIMIT: parseInt(process.env.PLOT_LIMIT || 0, 10),
+
   ConfigFile: {}
 };
 
