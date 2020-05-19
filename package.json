@@ -1,0 +1,20 @@
+{
+  "name": "plex-notifier",
+  "version": "1.0.0",
+  "description": "plex notifer via telegram",
+  "main": "application.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "fatshotty",
+  "license": "ISC",
+  "dependencies": {
+    "cron": "^1.8.2",
+    "dotenv": "^8.2.0",
+    "imdb-api": "^4.0.3",
+    "node-tvdb": "^4.1.0",
+    "plex-api": "^5.3.1",
+    "slimbot": "^4.7.0",
+    "tmdb": "^2.5.1"
+  }
+}
