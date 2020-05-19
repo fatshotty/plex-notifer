@@ -1,5 +1,7 @@
 const Path = require('path');
 const {Config} = require('../utils');
+const {PlexQuery} = require('../plex');
+const FS = require('fs');
 
 function formatBytes(bytes, decimals = 2) {
   if (bytes === 0) return '0 Bytes';
@@ -44,14 +46,56 @@ function extractMediaData(media) {
     }
 
   } catch(e) {
-    console.error(`cannot extract mediadata from ${filename} - ${e.message}` );
+    console.error(`[Template ${library}] cannot extract mediadata from ${filename} - ${e.message}` );
   }
 
   return {videoRes, audioCh};
 }
 
 
-module.exports = function(scraped, plexItem, library) {
+module.exports = function({scraped, plexItem}, library) {
+
+  let p_poster = new Promise( (resolve, reject) => {
+    if ( scraped.Poster ) {
+
+      resolve( scraped.Poster );
+
+    } else if (  scraped.Backdrop ) {
+
+      console.log(`[Template ${library}] use backdrop`);
+      resolve( scraped.Backdrop );
+
+    } else if ( plexItem.thumb ) {
+
+      console.log(`[Template ${library}] use thumnail ${plexItem.thumb}`);
+      PlexQuery(plexItem.thumb).then( (buff) => {
+        let fn = `./temp_thumb_${Date.now()}.png`;
+        FS.writeFileSync(fn, buff, {encoding: 'binary'});
+        let rs = FS.createReadStream(fn);
+        rs.on('end', () => {
+          FS.unlinkSync(fn);
+        });
+        resolve( rs );
+      });
+
+    }  else if ( plexItem.art ) {
+
+      console.log(`[Template ${library}] use fanart ${plexItem.art}`);
+      PlexQuery(plexItem.art).then( (buff) => {
+        let fn = `./temp_art_${Date.now()}.png`;
+        FS.writeFileSync(fn, buff, {encoding: 'binary'});
+        let rs = FS.createReadStream(fn);
+        rs.on('end', () => {
+          FS.unlinkSync(fn);
+        });
+        resolve( rs );
+      });
+
+    } else {
+      resolve( '' );
+    }
+
+  });
 
   let year = scraped.Year || plexItem.year;
 
@@ -100,6 +144,8 @@ module.exports = function(scraped, plexItem, library) {
   let resolution = mediaData.map( res => res.videoRes ).filter( res => !!res ).join(' / ');
   let audioCh = mediaData.map( res => res.audioCh ).filter( res => !!res ).join(' / ');
 
+  // 🏅
+
   let str = [
     `🎬 <b>${scraped.Title || plexItem.title}</b>`,
     '',
@@ -118,5 +164,10 @@ module.exports = function(scraped, plexItem, library) {
     Config.PC_NAME ? `- ${Config.PC_NAME} -` : 'NO'
   ]
 
-  return str.filter(row => row != 'NO').join('\n');
+  return p_poster.then( (poster) => {
+    return Promise.resolve( {
+      poster,
+      html: str.filter(row => row != 'NO').join('\n'),
+    });
+  });
 }

@@ -3,11 +3,8 @@ const Telegram = require('slimbot');
 
 const Slimbot = new Telegram(Config.TELEGRAM_BOT_ID);
 
-
 let queue = [];
-let interval = null;
 let FREE = true;
-
 
 function publish(posterUrl, html) {
   queue.push({posterUrl, html});
@@ -19,6 +16,7 @@ function publish(posterUrl, html) {
 function send() {
   let data = queue.shift();
   if ( !data ) {
+    console.log(`[TelgramBot] empty telegram queue, mark as free`);
     return FREE = true;
   }
   FREE = false;
@@ -30,20 +28,30 @@ function send() {
 
 function _send(posterUrl, html) {
   return new Promise( (resolve, reject) => {
-    Slimbot.sendPhoto(Config.TELEGRAM_CHAT_ID, posterUrl, {
+    let title = html.split('\n').shift();
+    let isUrl = typeof posterUrl == 'string';
+    console.log(`[TelgramBot] notifing to telegram: ${title} ${isUrl ? 'with poster url' : 'with buffer'}`);
+    let method = 'sendPhoto';
+    let opts = {
       parse_mode: "html",
       disable_web_page_preview: false,
       disable_notification: false,
       caption: html
-    })
-    .then( () => {
-      console.log(`Successfull send to telegram, waiting...`);
-      setTimeout( resolve, 5000);
-    })
-    .catch( (e) => {
-      console.log(`[ERROR telegram] ${e.message}`);
-      resolve();
-    });
+    };
+    if ( !posterUrl ) {
+      method = 'sendMessage';
+      delete opts.caption;
+      posterUrl = html;
+    }
+    Slimbot[ method ](Config.TELEGRAM_CHAT_ID, posterUrl, opts )
+      .then( () => {
+        console.log(`[TelgramBot] Successfull sent to telegram ${title}, waiting for queue...`);
+        setTimeout( resolve, 5000);
+      })
+      .catch( (e) => {
+        console.log(`[ERROR telegram] ${e.message}`);
+        resolve();
+      });
   })
 }
 

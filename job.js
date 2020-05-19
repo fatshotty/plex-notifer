@@ -122,9 +122,9 @@ class Job extends EventEmitter {
           scraped: item.scraped || {}
         };
         try {
-          console.log(`${this.JobName} try to notify [${this.plexlibrary.Name} (${this.plexlibrary.Key})] - ${obj.scraped.Name || item.plexItem.title}`);
-          let compiledTemplate = Templates.Movie(obj.scraped, item.plexItem, this.plexlibrary.Name);
-          ps.push(  Promise.resolve({poster: obj.scraped.Poster, html: compiledTemplate}) );
+          console.log(`${this.JobName} try to notify - ${obj.scraped.Name || item.plexItem.title}`);
+          let compiledTemplate = Templates.Movie(obj, this.plexlibrary.Name);
+          ps.push(  compiledTemplate ); // Promise.resolve({poster: obj.scraped.Poster, html: compiledTemplate}) );
         } catch( e ) {
           console.log(`[ERROR pug] ${this.JobName} ${e.message}`);
         }
