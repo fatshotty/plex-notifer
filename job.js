@@ -98,7 +98,7 @@ class Job extends EventEmitter {
                   resolve( {scraped: null, plexItem} );
                 })
               } else {
-                // TODO: collect data from Plex resultset
+                console.warn(`${this.JobName} - 0 results scraped for ${plexItem.title} (${plexItem.year})`);
                 resolve( {scraped: null, plexItem} );
               }
             }).catch( (e) => {

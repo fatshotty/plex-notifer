@@ -9,20 +9,37 @@ let TvdbCli = new TVDB( ALL_TVDB_KEY.shift(), 'it');
 function search(terms, year) {
   return TvdbCli.getSeriesByName(terms, 'it').then( (tvshows) => {
     let result = [];
+
+    // check entire name and year
     for ( let tvshow of tvshows ) {
       if ( tvshow.seriesName && tvshow.firstAired ) {
         let checkYear = true;
         if ( year ) {
           checkYear = tvshow.firstAired.substring(0, 4) == year;
         }
-        if ( tvshow.seriesName.toLowerCase().indexOf( terms.toLowerCase() ) == 0 && checkYear ) {
+        if ( tvshow.seriesName.trim().toLowerCase() == terms.trim().toLowerCase() && checkYear ) {
           result.push(tvshow);
         }
       }
     }
 
     if ( result.length == 0 ) {
-      console.warn(`\t[TVDB] [${terms} - (${year})] not found on tvdb. Check another way`);
+      console.warn(`\t[TVDB] [${terms} - (${year})] not found by entire name. Check another way`);
+      for ( let tvshow of tvshows ) {
+        if ( tvshow.seriesName && tvshow.firstAired ) {
+          let checkYear = true;
+          if ( year ) {
+            checkYear = tvshow.firstAired.substring(0, 4) == year;
+          }
+          if ( tvshow.seriesName.toLowerCase().indexOf( terms.toLowerCase() ) == 0 && checkYear ) {
+            result.push(tvshow);
+          }
+        }
+      }
+    }
+
+    if ( result.length == 0 ) {
+      console.warn(`\t[TVDB] [${terms} - (${year})] not found. Check another way`);
 
       for ( let tvshow of tvshows ) {
         if ( tvshow.seriesName && tvshow.firstAired ) {
@@ -32,14 +49,17 @@ function search(terms, year) {
             let tvshow_year = parseInt( tvshow.firstAired.substring(0, 4), 10 );
             checkYear = tvshow_year >= (year - 2) || tvshow_year <= (year + 2);
           }
-          if ( tvshow.seriesName.toLowerCase().indexOf( terms.toLowerCase() ) == 0 && checkYear ) {
-            console.warn(`[TVDB] '${tvshow.seriesName}' found with range of year: ${year} - ${tvshow.firstAired}`);
+          if ( tvshow.seriesName.trim().toLowerCase() == terms.trim().toLowerCase() && checkYear ) {
+            console.warn(`\t[TVDB] '${tvshow.seriesName}' found with range of year: ${year} - ${tvshow.firstAired}`);
+            result.push(tvshow);
+          } else if ( tvshow.seriesName.toLowerCase().indexOf( terms.toLowerCase() ) == 0 && checkYear ) {
+            console.warn(`\t[TVDB] '${tvshow.seriesName}' found with part of name and range of year: ${year} - ${tvshow.firstAired}`);
             result.push(tvshow);
           } else {
             let tvshow_name = tvshow.seriesName;
             tvshow_name = tvshow_name.replace(/[^\w|\s]/g, '');
             if ( tvshow_name.toLowerCase().indexOf( terms.toLowerCase() ) == 0 && checkYear ) {
-              console.warn(`[TVDB] '${tvshow.seriesName}' found without special chars and range of year: ${year} - ${tvshow.firstAired}`);
+              console.warn(`\t[TVDB] '${tvshow.seriesName}' found without special chars and range of year: ${year} - ${tvshow.firstAired}`);
               result.push(tvshow);
             }
           }
