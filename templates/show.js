@@ -40,14 +40,14 @@ function extractMediaData(media) {
 }
 
 
-module.exports = function({scraped, plexItem}, library) {
+module.exports = function({scraped, plexItem}, {Name}) {
 
   let p_poster = new Promise( (resolve, reject) => {
     if ( scraped.Poster ) {
 
       resolve( scraped.Poster );
 
-    } else if (  scraped.Backdrop ) {
+    } else if ( scraped.Backdrop ) {
 
       console.log(`[Template ${library}] use backdrop`);
       resolve( scraped.Backdrop );

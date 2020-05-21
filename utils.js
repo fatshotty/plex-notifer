@@ -30,6 +30,8 @@ const Config = {
 
   PC_NAME: process.env.PC_NAME,
 
+  PLEX_LIBRARY_SKIP_SCRAPE: (process.env.PLEX_LIBRARY_SKIP_SCRAPE || '').split(',').map( l => l.trim() ).filter( l => !!l),
+
   PLOT_LIMIT: parseInt(process.env.PLOT_LIMIT || 0, 10),
 
   ConfigFile: {}

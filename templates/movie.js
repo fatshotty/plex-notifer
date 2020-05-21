@@ -53,7 +53,7 @@ function extractMediaData(media) {
 }
 
 
-module.exports = function({scraped, plexItem}, library) {
+module.exports = function({scraped, plexItem}, {Name}) {
 
   let p_poster = new Promise( (resolve, reject) => {
     if ( scraped.Poster ) {

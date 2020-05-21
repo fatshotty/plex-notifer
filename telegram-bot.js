@@ -32,7 +32,7 @@ function _send(posterUrl, html) {
   return new Promise( (resolve, reject) => {
     let title = html.split('\n').shift();
     let isUrl = typeof posterUrl == 'string';
-    console.log(`[TelgramBot] notifing to telegram: ${title} ${isUrl ? 'with poster url' : 'with buffer'}`);
+    console.log(`[TelgramBot] notifing to telegram: ${title} ${isUrl ? 'with poster url' : 'with poster object'}`);
     let method = 'sendPhoto';
     let opts = {
       parse_mode: "html",
@@ -41,7 +41,7 @@ function _send(posterUrl, html) {
       caption: html
     };
     if ( !posterUrl ) {
-      method = 'sendPhoto';
+      method = 'sendMessage';
       delete opts.caption;
       posterUrl = html;
     }

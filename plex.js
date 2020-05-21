@@ -1,5 +1,6 @@
 const {Config} = require('./utils');3
 const PlexAPI = require("plex-api");
+const Path = require('path');
 
 
 const options = {
@@ -44,7 +45,6 @@ class PlexLibrary {
     this.data = obj;
   }
 
-
   recentlyAdded(start, count) {
     // ?X-Plex-Container-Start=${start}&X-Plex-Container-Size=${count}
     return PlexQuery(`/library/sections/${this.Key}/recentlyAdded`);
@@ -77,35 +77,72 @@ class PlexLibrary {
   }
 
   remapData( items ) {
-    if ( this.Type != 'show' ) {
-      return items;
-    }
+    if ( this.Key == '9' ) {
 
+      // SerieTV
 
-    let res = {};
-    for ( let item of items ) {
+      let res = {};
+      for ( let item of items ) {
 
-      let show = res[ item.grandparentTitle ];
-      if ( !show ) {
-        show = res[ item.grandparentTitle ] = JSON.parse( JSON.stringify(item) ); // duplicate item
-        show.Seasons = {};
-        show.Media = [];
+        let show = res[ item.grandparentTitle ];
+        if ( !show ) {
+          show = res[ item.grandparentTitle ] = JSON.parse( JSON.stringify(item) ); // duplicate item
+          show.Seasons = {};
+          show.Media = [];
+        }
+
+        show.Seasons[ item.parentTitle ] = item.year
+        show.Media = show.Media.concat( item.Media );
+
+        show.addedAt = Math.max( show.addedAt, item.addedAt );
       }
 
-      show.Seasons[ item.parentTitle ] = item.year
-      show.Media = show.Media.concat( item.Media );
+      let shows = Object.values(res);
 
-      show.addedAt = Math.max( show.addedAt, item.addedAt );
+      for ( let show of shows ) {
+        show.title = show.grandparentTitle;
+        show.year = Object.values(show.Seasons).sort( (y1, y2) => y1 > y2 ? 1 : -1 )[0];
+      }
+
+      return shows;
+
+
+    } else if ( this.Key == '16' || this.Key == '25' ) {
+      // Video - Videos Collection
+
+      let res = {};
+      for ( let item of items ) {
+
+        let filepath = null;
+        try {
+          filepath = item.Media[0].Part[0].file;
+        } catch (e) {
+          continue;
+        }
+
+        let fileext = Path.extname(filepath);
+        let filename = Path.basename(filepath, fileext);
+        let dirpath = Path.dirname(filepath);
+        let dirname = Path.basename(dirpath);
+
+        let collection = res[ dirname ];
+        if ( !collection ) {
+          collection = res[ dirname ] = JSON.parse( JSON.stringify(item) ); // duplicate item
+          collection.Media = [];
+        }
+
+        collection.title = dirname;
+        collection.Media = collection.Media.concat( item.Media );
+
+        collection.addedAt = Math.max( collection.addedAt, item.addedAt );
+
+      }
+      return Object.values(res);
+
+
+    } else {
+      return items;
     }
-
-    let shows = Object.values(res);
-
-    for ( let show of shows ) {
-      show.title = show.grandparentTitle;
-      show.year = Object.values(show.Seasons).sort( (y1, y2) => y1 > y2 ? 1 : -1 )[0];
-    }
-
-    return shows;
   }
 
 

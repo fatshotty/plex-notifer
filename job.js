@@ -75,6 +75,11 @@ class Job extends EventEmitter {
 
       // TODO: scrape
 
+      if ( Config.PLEX_LIBRARY_SKIP_SCRAPE.indexOf( this.plexlibrary.Key) > -1 ) {
+        console.log(`${this.JobName} skip scraper`);
+        return items.map( i => ({plexItem: i}) );
+      }
+
       let ps = [];
       let _scraper = 'TMDB';
       let _scraper_type = 'movie';
@@ -125,7 +130,7 @@ class Job extends EventEmitter {
         };
         try {
           console.log(`${this.JobName} try to notify - ${obj.scraped.Name || item.plexItem.title}`);
-          let compiledTemplate = Templates[this.plexlibrary.Type](obj, this.plexlibrary.Name);
+          let compiledTemplate = Templates[`template_${this.plexlibrary.Key}`](obj, this.plexlibrary);
           ps.push(  compiledTemplate ); // Promise.resolve({poster: obj.scraped.Poster, html: compiledTemplate}) );
         } catch( e ) {
           console.log(`[ERROR pug] ${this.JobName} ${e.message}`);
