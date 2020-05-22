@@ -6,5 +6,5 @@ module.exports = {
   template_13: require('./show'),
 
   template_25: require('./videos_collections'),
-  template_16: require('./videos_collections')
+  template_16: require('./videos')
 };
