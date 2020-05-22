@@ -46,7 +46,7 @@ function extractMediaData(media) {
     }
 
   } catch(e) {
-    console.error(`[Template ${library}] cannot extract mediadata from ${filename} - ${e.message}` );
+    console.error(`[Template] cannot extract mediadata from ${filename} - ${e.message}` );
   }
 
   return {videoRes, audioCh};

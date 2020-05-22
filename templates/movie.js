@@ -46,7 +46,7 @@ function extractMediaData(media) {
     }
 
   } catch(e) {
-    console.error(`[Template ${library}] cannot extract mediadata from ${filename} - ${e.message}` );
+    console.error(`[Template] cannot extract mediadata from ${filename} - ${e.message}` );
   }
 
   return {videoRes, audioCh};
@@ -62,12 +62,12 @@ module.exports = function({scraped, plexItem}, {Name}) {
 
     } else if (  scraped.Backdrop ) {
 
-      console.log(`[Template ${library}] use backdrop`);
+      console.log(`[Template ${Name}] use backdrop`);
       resolve( scraped.Backdrop );
 
     } else if ( plexItem.thumb ) {
 
-      console.log(`[Template ${library}] use thumnail ${plexItem.thumb}`);
+      console.log(`[Template ${Name}] use thumnail ${plexItem.thumb}`);
       PlexQuery(plexItem.thumb).then( (buff) => {
         let fn = `./temp_thumb_${Date.now()}.png`;
         FS.writeFileSync(fn, buff, {encoding: 'binary'});
@@ -80,7 +80,7 @@ module.exports = function({scraped, plexItem}, {Name}) {
 
     }  else if ( plexItem.art ) {
 
-      console.log(`[Template ${library}] use fanart ${plexItem.art}`);
+      console.log(`[Template ${Name}] use fanart ${plexItem.art}`);
       PlexQuery(plexItem.art).then( (buff) => {
         let fn = `./temp_art_${Date.now()}.png`;
         FS.writeFileSync(fn, buff, {encoding: 'binary'});
