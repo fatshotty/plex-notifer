@@ -133,10 +133,10 @@ module.exports = function({scraped, plexItem}, {Name}) {
 
   let imdb_link = '';
   if ( scraped.ImdbData ) {
-    imdb_link = `<a href="https://www.imdb.com/title/${scraped.ImdbData.imdbid}">IMDB</a>`;
+    imdb_link = `<a href="https://www.imdb.com/title/${scraped.ImdbData.imdbid}">IMDB</a> ↗️ `;
     let vote = plexItem.rating || (scraped.ImdbData && scraped.ImdbData.rating) || scraped.Vote;
     if ( vote ) {
-      imdb_link +=  ` ↗️   Voto: ${vote}`;
+      imdb_link +=  ` Voto: ${vote}`;
     }
   }
 
@@ -153,6 +153,7 @@ module.exports = function({scraped, plexItem}, {Name}) {
 
   let str = [
     `🎬 <b>${scraped.Title || plexItem.title}</b>`,
+    `<i>aggiunto in ${Name}</i>`,
     '',
     year ? `<b>Anno:</b> ${year}` : 'NO',
     genres ? `<b>Genere:</b> ${genres}` : 'NO',

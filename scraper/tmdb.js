@@ -31,9 +31,9 @@ function search(terms, year, type='movie') {
     results = results.filter((movie) => {
       let checkYear = true;
       if ( year ) {
-        checkYear = movie.releaseDate.substring(0, 4) == year;
+        checkYear = (movie.releaseDate || movie.firstAirDate || '').substring(0, 4) == year;
       }
-      return (movie.title.toLowerCase() == terms.toLowerCase()) && checkYear;
+      return ( (movie.title || movie.originalName || '').toLowerCase() == terms.toLowerCase()) && checkYear;
     });
     return {results};
   }).catch( (e) => {

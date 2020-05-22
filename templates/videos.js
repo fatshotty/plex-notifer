@@ -64,6 +64,7 @@ module.exports = function({scraped, plexItem}, {Name}) {
 
   let str = [
     `📽 <b>${plexItem.title}</b>`,
+    `<i>aggiunto in ${Name}</i>`,
     '',
     resolution ? `<b>Risoluzione:</b> ${resolution}` : 'NO',
     audioCh ? `<b>Canali Audio:</b> ${audioCh}` : 'NO',

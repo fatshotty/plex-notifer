@@ -9,6 +9,8 @@ const Scraper = require('./scraper/scraper');
 
 const TelegramBot = require('./telegram-bot');
 
+const SCRAPERS = ['TMDB', 'TVDB'];
+
 
 class Job extends EventEmitter {
 
@@ -81,37 +83,14 @@ class Job extends EventEmitter {
       }
 
       let ps = [];
-      let _scraper = 'TMDB';
       let _scraper_type = 'movie';
 
       if ( this.plexlibrary.Type == 'show' ) {
-        _scraper = 'TVDB';
         _scraper_type = 'tv';
       }
 
       for ( let plexItem of items ) {
-        console.log(`${this.JobName} scraping ${plexItem.title} (${plexItem.year}) via ${_scraper} (addedAt: ${plexItem.addedAt})`);
-        ps.push( new Promise( (resolve, reject) => {
-          Scraper[ _scraper ].search(plexItem.title, plexItem.year, _scraper_type).then( (tmdbData) => {
-              let results = tmdbData.results;
-              let first = results[0];
-              if ( first ) {
-                Scraper[ _scraper ].getInfo(first.id, _scraper_type).then( (klass) => {
-                  resolve( {scraped: klass, plexItem} );
-                }).catch( (e) => {
-                  console.error(`[ERROR ${_scraper}-info-${this.plexlibrary.Key}] ${this.JobName} ${e.message} [${plexItem.title} (${plexItem.year})]`);
-                  resolve( {scraped: null, plexItem} );
-                })
-              } else {
-                console.warn(`${this.JobName} - 0 results scraped for ${plexItem.title} (${plexItem.year})`);
-                resolve( {scraped: null, plexItem} );
-              }
-            }).catch( (e) => {
-              console.error(`[ERROR ${_scraper}-search-${this.plexlibrary.Key}] ${this.JobName} ${e.message} [${plexItem.title} (${plexItem.year})]`);
-              resolve( {scraped: null, plexItem} );
-            })
-          })
-        );
+        ps.push( this.scrape( plexItem, _scraper_type ) );
       }
 
       return ps.length ? Promise.all(ps) : [];
@@ -179,7 +158,40 @@ class Job extends EventEmitter {
 
   }
 
+  scrape(plexItem, type) {
 
+    let scrapeIndex = -1;
+
+    return new Promise( (resolve, reject) => {
+
+      let fn_scrape = () => {
+        let scraper = SCRAPERS[ ++scrapeIndex ];
+        if ( !scraper ) {
+          console.log(`${this.JobName} scraping ${plexItem.title} (${plexItem.year}) no more scraper`);
+          return resolve( {scraped: null, plexItem} );
+        }
+        console.log(`${this.JobName} scraping ${plexItem.title} (${plexItem.year}) via ${scraper} (addedAt: ${plexItem.addedAt})`);
+        return Scraper[ scraper ].search(plexItem.title, plexItem.year, type).then( (scraperdata) => {
+          let results = scraperdata.results;
+          let first = results[0];
+          if ( first ) {
+            Scraper[ scraper ].getInfo(first.id, type).then( (klass) => {
+              resolve( {scraped: klass, plexItem} );
+            })
+          } else {
+            // force to catch error on 'catch' function
+            throw new Error(`not found on ${scraper}`);
+          }
+        }).catch( (e) => {
+          console.error( `${this.JobName} - ${plexItem.title} (${plexItem.year}) ${e.message}` );
+          fn_scrape();
+        });
+      }
+
+      fn_scrape();
+    });
+
+  }
 
   onComplete(error) {
     this.isExecuting = false;

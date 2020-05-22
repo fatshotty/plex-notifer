@@ -50,10 +50,16 @@ class TvShow extends Entity {
   }
 
   get Backdrop() {
+    if ( this.config ) {
+      return super.Backdrop
+    }
     return this.data.backdropPath ? `https://artworks.thetvdb.com/banners/${this.data.backdropPath}` : undefined;
   }
 
   get Poster() {
+    if ( this.config ) {
+      return super.Poster
+    }
     return this.data.posterPath ? `https://artworks.thetvdb.com/banners/${this.data.posterPath}` : undefined;
   }
 
@@ -140,10 +146,16 @@ class Season extends Entity {
   }
 
   get Backdrop() {
+    if ( this.config ) {
+      return super.Backdrop
+    }
     return this.data.backdropPath ? `https://artworks.thetvdb.com/banners/${this.data.backdropPath}` : undefined;
   }
 
   get Poster() {
+    if ( this.config ) {
+      return super.Poster
+    }
     return this.data.posterPath ? `https://artworks.thetvdb.com/banners/${this.data.posterPath}` : undefined;
   }
 
@@ -204,10 +216,16 @@ class Episode extends Entity {
   }
 
   get Backdrop() {
+    if ( this.config ) {
+      return super.Backdrop
+    }
     return this.data.backdropPath ? `https://artworks.thetvdb.com/banners/${this.data.backdropPath}` : undefined;
   }
 
   get Poster() {
+    if ( this.config ) {
+      return super.Poster
+    }
     return this.data.posterPath ? `https://artworks.thetvdb.com/banners/${this.data.posterPath}` : undefined;
   }
 

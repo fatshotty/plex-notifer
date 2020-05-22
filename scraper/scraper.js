@@ -85,7 +85,7 @@ function wrapInfo(engine) {
       } else if ( type == 'tv' ) {
         // Log.info(`get seasons infos for ${id}`);
         // data.seasons = await getInfoSeasons( id, data.seasons.map( s => s.seasonNumber ) );
-        return new TvShow(data, TMDB.getTmdbConfig() );
+        return new TvShow(data, engine === TMDB ? TMDB.getTmdbConfig() : null );
       } else {
         throw new Error('no supported media');
       }

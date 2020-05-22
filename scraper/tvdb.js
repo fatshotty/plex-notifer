@@ -12,6 +12,9 @@ function search(terms, year) {
 
     // check entire name and year
     for ( let tvshow of tvshows ) {
+      if ( tvshow.id == '86364') {
+        console.log('found');
+      }
       if ( tvshow.seriesName && tvshow.firstAired ) {
         let checkYear = true;
         if ( year ) {

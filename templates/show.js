@@ -108,10 +108,10 @@ module.exports = function({scraped, plexItem}, {Name}) {
   }
 
   let summary = '';
-  if ( scraped.Description ) {
-    summary = scraped.Description;
-  } else if (plexItem.summary ) {
+  if (plexItem.summary ) {
     summary = plexItem.summary;
+  } else if ( scraped.Description ) {
+    summary = scraped.Description;
   }
 
   if ( Config.PLOT_LIMIT && summary.length > Config.PLOT_LIMIT ) {
@@ -120,10 +120,10 @@ module.exports = function({scraped, plexItem}, {Name}) {
 
   let imdb_link = '';
   if ( scraped.ImdbData ) {
-    imdb_link = `<a href="https://www.imdb.com/title/${scraped.ImdbData.imdbid}">IMDB</a>`;
+    imdb_link = `<a href="https://www.imdb.com/title/${scraped.ImdbData.imdbid}">IMDB</a> ↗️ `;
     let vote = scraped.ImdbData ? scraped.ImdbData.rating : null;
     if ( vote ) {
-      imdb_link +=  ` ↗️   Voto: ${vote}`;
+      imdb_link +=  ` Voto: ${vote}`;
     }
   }
 
@@ -146,6 +146,7 @@ module.exports = function({scraped, plexItem}, {Name}) {
 
   let str = [
     `📺 <b>${scraped.Title || plexItem.title}</b>`,
+    `<i>aggiunto in ${Name}</i>`,
     '',
     seasons ? `<b>Stagioni:</b> ${seasons}` : 'NO',
     seasons ? '' : 'NO', // empty line if seasons exist
