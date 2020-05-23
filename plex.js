@@ -77,7 +77,7 @@ class PlexLibrary {
   }
 
   remapData( items ) {
-    if ( this.Key == '9' ) {
+    if ( this.Key == '9'|| this.Key == '13' ) {
 
       // SerieTV
 
