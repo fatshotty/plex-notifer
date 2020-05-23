@@ -1,43 +1,8 @@
 const Path = require('path');
-const {Config} = require('../utils');
+const {Config, formatBytes, extractMediaData} = require('../utils');
 const {PlexQuery} = require('../plex');
 const FS = require('fs');
 
-function extractMediaData(media) {
-
-  let videoRes = media.videoResolution;
-  let audioCh = media.audioChannels;
-
-  let filename = media.Part && media.Part[0].file;
-
-  filename = Path.basename( filename );
-
-  let lastIndex = filename.lastIndexOf('-');
-  let details = filename.substring(lastIndex + 1).trim();
-
-
-  details = details.substring(0, details.lastIndexOf('.') );
-  details = details.split(' ');
-
-  // 1080p x265 AC3 5.1 9.3GB.mkv
-
-  // remove dimension
-  details.pop();
-
-  try {
-    audioCh = parseFloat(audioCh || details.pop()).toFixed(1);
-
-    videoRes = videoRes || details.shift();
-    if ( isNaN( Number(videoRes.charAt(0) ) )  ) {
-      videoRes = details.shift();
-    }
-
-  } catch(e) {
-    console.error(`[Template] cannot extract mediadata from ${filename} - ${e.message}` );
-  }
-
-  return {videoRes, audioCh};
-}
 
 
 module.exports = function({scraped, plexItem}, {Name}) {

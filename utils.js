@@ -34,6 +34,8 @@ const Config = {
 
   PLOT_LIMIT: parseInt(process.env.PLOT_LIMIT || 0, 10),
 
+  ROOT_MEDIA_FOLDER: process.env.ROOT_MEDIA_FOLDER,
+
   ConfigFile: {}
 };
 
@@ -62,7 +64,59 @@ function saveConfig() {
 }
 
 
+function formatBytes(bytes, decimals = 2) {
+  if (bytes === 0) return '0 Bytes';
+
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+}
+
+
+function extractMediaData(media) {
+
+  let videoRes = media.videoResolution;
+  let audioCh = media.audioChannels;
+
+  let filename = media.Part && media.Part[0].file;
+
+  filename = Path.basename( filename );
+
+  let lastIndex = filename.lastIndexOf('-');
+  let details = filename.substring(lastIndex + 1).trim();
+
+
+  details = details.substring(0, details.lastIndexOf('.') );
+  details = details.split(' ');
+
+  // 1080p x265 AC3 5.1 9.3GB.mkv
+
+  // remove dimension
+  details.pop();
+
+  try {
+    audioCh = parseFloat(audioCh || details.pop()).toFixed(1);
+
+    videoRes = videoRes || details.shift();
+    if ( isNaN( Number(videoRes.charAt(0) ) )  ) {
+      videoRes = details.shift();
+    }
+
+  } catch(e) {
+    console.error(`[Template] cannot extract mediadata from ${filename} - ${e.message}` );
+  }
+
+  return {videoRes, audioCh};
+}
+
+
 module.exports = {
   Config,
-  saveConfig
+  saveConfig,
+  formatBytes,
+  extractMediaData
 };

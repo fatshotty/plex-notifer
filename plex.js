@@ -1,4 +1,4 @@
-const {Config} = require('./utils');3
+const {Config} = require('./utils');
 const PlexAPI = require("plex-api");
 const Path = require('path');
 

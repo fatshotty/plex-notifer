@@ -4,6 +4,7 @@ const CronJob = require('cron').CronJob;
 const Templates = require('./templates/index');
 const Path = require('path');
 const EventEmitter = require('events');
+const {Worker} = require('worker_threads');
 
 const Scraper = require('./scraper/scraper');
 
@@ -37,6 +38,27 @@ class Job extends EventEmitter {
       false,                       // start
       'Europe/Amsterdam'           // timeZone
     );
+
+    this.spawnThread();
+  }
+
+  spawnThread() {
+    this.Worker = new Worker('./db_worker.js', {stdin: true, stdout: false, stderr: false});
+    this.Worker.on('exit', (code) => {
+      console.log(`[WARN] ${this.JobName} - Worker is exited: ${code}`);
+      this.spawnThread();
+    });
+    this.Worker.on('message', (data) => {
+      console.log(`${this.JobName} Worker - received data ${data.length}`);
+    });
+  }
+
+  sendToThread(items) {
+    try {
+      this.Worker.postMessage({JOB: this.JobName, items});
+    } catch( e ) {
+      console.log(`[ERROR] ${this.JobName} - cannot send to thread: ${e.message}`);
+    }
   }
 
 
@@ -94,6 +116,17 @@ class Job extends EventEmitter {
       }
 
       return ps.length ? Promise.all(ps) : [];
+    })
+
+
+    // spawn thread
+    .then( (items) => {
+
+
+      this.sendToThread(items);
+
+
+      return items;
     })
 
     .then( (items) => {
