@@ -141,7 +141,22 @@ class PlexLibrary {
 
 
     } else {
-      return items;
+      // docu-film , film
+
+      let res = {};
+      for ( let item of items ) {
+
+        let movie = res[ item.title.toLowerCase() ];
+        if ( !movie ) {
+          movie = res[ item.title.toLowerCase() ] = JSON.parse(JSON.stringify(item) );
+          movie.Media = [];
+        }
+
+        movie.Media = movie.Media.concat( item.Media );
+
+      }
+
+      return Object.values(res);
     }
   }
 
