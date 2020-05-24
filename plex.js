@@ -120,8 +120,6 @@ class PlexLibrary {
           continue;
         }
 
-        let fileext = Path.extname(filepath);
-        let filename = Path.basename(filepath, fileext);
         let dirpath = Path.dirname(filepath);
         let dirname = Path.basename(dirpath);
 

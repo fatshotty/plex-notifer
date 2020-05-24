@@ -6,7 +6,7 @@ const TvShow = require('./scraper/models/tvshow')
 const Worker /* {parentPort, workerData, MessageChannel} */  = require('worker_threads');
 
 
-Worker.parentPort.on('message', startProcess);
+// Worker.parentPort.on('message', startProcess);
 
 
 function startProcess({JOB, items}) {
@@ -32,23 +32,58 @@ class PopulateDB {
 
 
 
-  computeEntryData(scrapedItem, plexItem) {
+  computeEntryData(scraped, plexItem) {
+
+
+    let year = scraped.Year || plexItem.year;
+
+    let genres = '';
+    if ( scraped.Genres && scraped.Genres.length ) {
+      genres = scraped.Genres.slice(0, 3);
+    } else if ( plexItem.Genre && plexItem.Genre.length ) {
+      genres = plexItem.Genre.slice(0, 3).map( g => g.tag );
+    }
+
+    let director = '';
+    if ( scraped.Directors && scraped.Directors.length ) {
+      director = scraped.Directors[0];
+    } else if ( plexItem.Director && plexItem.Director.length ) {
+      director = plexItem.Director.slice(0, 2).map( d => d.tag )[0];
+    }
+
+    let cast = '';
+    if ( scraped.Cast && scraped.Cast.length ) {
+      cast = scraped.Cast.slice(0, 5);
+    } else if ( plexItem.Role && plexItem.Role.length ) {
+      cast = plexItem.Role.slice(0, 5).map( c => c.tag );
+    }
+
+    let summary = '';
+    if (plexItem.summary ) {
+      summary = plexItem.summary;
+    } else if ( scraped.Description ) {
+      summary = scraped.Description;
+    }
+
+    if ( Config.PLOT_LIMIT && summary.length > Config.PLOT_LIMIT ) {
+      summary = `${summary.slice(0, Config.PLOT_LIMIT)}...`;
+    }
 
     let data = {
-      Name: scrapedItem.Title || plexItem.title,
-      TmdbId: `${scrapedItem.Id || 'id-' + Date.now()}`,
-      ImdbId: scrapedItem.ImdbData ? scrapedItem.ImdbData.imdbid : undefined,
-      Genres: scrapedItem.Genres,
-      Year: parseInt( `${scrapedItem.DateRange}`.substring(0, 4) , 10),
-      Website: scrapedItem.Homepage,
-      Collection: scrapedItem.Collection,
-      RatingImdb: parseFloat( scrapedItem.ImdbData ? scrapedItem.ImdbData.rating : 0),
-      Director: scrapedItem.Directors[0],
-      Cast: scrapedItem.Cast.slice(0, 5),
-      Plot: plexItem.summary || scrapedItem.Description,
-      YtTrailerId: scrapedItem.YT_trailer || '',
-      Poster: scrapedItem.Poster,
-      Fanart: scrapedItem.Backdrop,
+      Name: scraped.Title || plexItem.title,
+      TmdbId: `${scraped.Id || 'id-' + Date.now()}`,
+      ImdbId: scraped.ImdbData ? scraped.ImdbData.imdbid : undefined,
+      Genres: genres,
+      Year: year,
+      Website: scraped.Homepage,
+      Collection: scraped.Collection,
+      RatingImdb:  parseFloat( plexItem.rating || (scraped.ImdbData && scraped.ImdbData.rating) || scraped.Vote, 10),
+      Director: director,
+      Cast: cast,
+      Plot: summary,
+      YtTrailerId: scraped.YT_trailer || '',
+      Poster: scraped.Poster,
+      Fanart: scraped.Backdrop,
       is4k: 0,
       ClickCount: 0
     };
@@ -87,7 +122,7 @@ class PopulateDB {
       AudioChannels: mediafile.audioChannels,
       VideoCodec: mediafile.videoCodec,
       VideoResolution: videoResolution,
-      Reorder: parseInt(index, 10) ? parseInt(index, 10) : undefined,
+      Reorder: !isNaN( parseInt(index, 10) ) ? parseInt(index, 10) : undefined,
       Status: 'published'
     };
 
@@ -100,13 +135,13 @@ class PopulateDB {
     for ( let item of this._items ) {
       let entry = this.computeEntryData(item.scraped || {}, item.plexItem || {});
 
-      if ( m instanceof Movie ) {
+      if ( item.scraped instanceof Movie ) {
         // loop mediafiles
-        entry.Mediafiles = item.plexItem.Media.map( (mf, i) => computeMovieData(mf, i) ).filter( m => !!m );
-      } else if ( m instanceof TvShow ) {
+        entry.Mediafiles = item.plexItem.Media.map( (mf, i) => this.computeMovieData(mf, i) ).filter( m => !!m );
+      } else if ( item.scraped instanceof TvShow ) {
         // loop seasons
 
-        entry.Seasons = loopSeasons(m.Seasons, file.subfolders, entry.Year );
+        // entry.Seasons = loopSeasons(m.Seasons, file.subfolders, entry.Year );
 
       }
 
@@ -118,5 +153,14 @@ class PopulateDB {
   }
 
 
+  saveToDB() {
+
+  }
+
+
 
 }
+
+
+
+module.exports = startProcess;

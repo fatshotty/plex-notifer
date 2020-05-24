@@ -13,6 +13,9 @@ const TelegramBot = require('./telegram-bot');
 const SCRAPERS = ['TMDB', 'TVDB'];
 
 
+const startProcess = require('./db_worker');
+
+
 class Job extends EventEmitter {
 
 
@@ -39,7 +42,7 @@ class Job extends EventEmitter {
       'Europe/Amsterdam'           // timeZone
     );
 
-    this.spawnThread();
+    // this.spawnThread();
   }
 
   spawnThread() {
@@ -55,7 +58,8 @@ class Job extends EventEmitter {
 
   sendToThread(items) {
     try {
-      this.Worker.postMessage({JOB: this.JobName, items});
+      // this.Worker.postMessage({JOB: this.JobName, items});
+      startProcess({JOB: this.JobName, items});
     } catch( e ) {
       console.log(`[ERROR] ${this.JobName} - cannot send to thread: ${e.message}`);
     }
