@@ -199,16 +199,21 @@ class Job extends EventEmitter {
 
     let scrapeIndex = -1;
 
+    let {title, year} = this.extractTitleYear(plexItem);
+
+    title = title || plexItem.title;
+    year = year || plexItem.year;
+
     return new Promise( (resolve, reject) => {
 
       let fn_scrape = () => {
         let scraper = SCRAPERS[ ++scrapeIndex ];
         if ( !scraper ) {
-          console.log(`${this.JobName} scraping ${plexItem.title} (${plexItem.year}) no more scraper`);
+          console.log(`${this.JobName} scraping ${title} (${year}) no more scraper`);
           return resolve( {scraped: null, plexItem} );
         }
-        console.log(`${this.JobName} scraping ${plexItem.title} (${plexItem.year}) via ${scraper} (addedAt: ${plexItem.addedAt})`);
-        return Scraper[ scraper ].search(plexItem.title, plexItem.year, type).then( (scraperdata) => {
+        console.log(`${this.JobName} scraping ${title} (${year}) via ${scraper} (addedAt: ${plexItem.addedAt})`);
+        return Scraper[ scraper ].search(title, year, type).then( (scraperdata) => {
           let results = scraperdata.results;
           let first = results[0];
           if ( first ) {
@@ -220,13 +225,49 @@ class Job extends EventEmitter {
             throw new Error(`not found on ${scraper}`);
           }
         }).catch( (e) => {
-          console.error( `${this.JobName} - ${plexItem.title} (${plexItem.year}) ${e.message}` );
+          console.error( `${this.JobName} - ${title} (${year}) ${e.message}` );
           fn_scrape();
         });
       }
 
       fn_scrape();
     });
+
+  }
+
+
+  extractTitleYear(plexItem) {
+
+    let media = plexItem.Media;
+    let firstMedia = media && media[0];
+
+    let parts = firstMedia && firstMedia.Part;
+    let part = parts && parts[0];
+    let file = part && part.file;
+
+    if ( file ) {
+
+      let relativePath = Path.relative(Config.ROOT_MEDIA_FOLDER, file);
+      let paths = relativePath.split( Path.sep );
+
+      let category = paths.shift();
+      if ( !category ) {
+        // maybe path starts with '/'
+        category = paths.shift();
+      }
+
+      let foldername = paths.shift();
+
+      let year = foldername.match(/\((\d{4})\)$/) ? foldername.match(/\((\d{4})\)$/)[1] : 0;
+      let title = foldername.replace(/\((\d{4})\)$/, '');
+
+      year = parseInt(year, 10);
+      title = title.trim();
+
+      return {title, year, category};
+    }
+
+    return {}
 
   }
 

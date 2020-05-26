@@ -35,6 +35,7 @@ const Config = {
   PLOT_LIMIT: parseInt(process.env.PLOT_LIMIT || 0, 10),
 
   ROOT_MEDIA_FOLDER: process.env.ROOT_MEDIA_FOLDER,
+
   DB_HOST: process.env.DB_HOST,
   DB_PORT: process.env.DB_PORT,
   CATALOG_UUID: process.env.CATALOG_UUID,
