@@ -1,7 +1,9 @@
 const {Config} = require('./utils');
 const Path = require('path');
-const Movie = require('./scraper/models/movie')
-const TvShow = require('./scraper/models/tvshow')
+const Movie = require('./scraper/models/movie');
+const TvShow = require('./scraper/models/tvshow');
+const API = require('./api');
+const TelegramBot = require('./telegram-bot');
 
 const Worker /* {parentPort, workerData, MessageChannel} */  = require('worker_threads');
 
@@ -10,7 +12,7 @@ const Worker /* {parentPort, workerData, MessageChannel} */  = require('worker_t
 
 
 function startProcess({JOB, items}) {
-  JOB = 'Thread - ' + JOB.substring(1);
+  JOB = '[Thread - ' + JOB.substring(1);
   this.populateDB = new PopulateDB( JOB, items );
 
   process.nextTick( this.populateDB.execute.bind(this.populateDB) );
@@ -112,7 +114,7 @@ class PopulateDB {
 
 
     let data = {
-      Url: Path.join( Path.sep, Path.relative(Config.RootMediaFolder, part.file) ),
+      Url: Path.join( Path.sep, Path.relative(Config.ROOT_MEDIA_FOLDER, part.file) ),
       Filename: filename,
       Hidden: false,
       Source: undefined,
@@ -135,25 +137,224 @@ class PopulateDB {
     for ( let item of this._items ) {
       let entry = this.computeEntryData(item.scraped || {}, item.plexItem || {});
 
-      if ( item.scraped instanceof Movie ) {
-        // loop mediafiles
-        entry.Mediafiles = item.plexItem.Media.map( (mf, i) => this.computeMovieData(mf, i) ).filter( m => !!m );
-      } else if ( item.scraped instanceof TvShow ) {
-        // loop seasons
+      let TYPE = 'movies'
 
-        // entry.Seasons = loopSeasons(m.Seasons, file.subfolders, entry.Year );
+      if ( item.plexItem && item.plexItem.Seasons && item.plexItem.Seasons.length > 0 ) {
+        // TODO: tvshow
+        TYPE = 'tvshows';
+      } else {
+        // movies
+        entry.Mediafiles = item.plexItem.Media.map( (mf, i) => this.computeMovieData(mf, i) ).filter( m => !!m );
 
       }
 
-      console.log( JSON.stringify(entry) );
+      // console.log( JSON.stringify(entry) );
+
+
+      this.process(entry, TYPE).catch( (e) => {
+        TelegramBot.report( `${this.JobName} - error saving on db: ${e.message} - ${( (e.stack && e.stack.split('\n')) || []).shift()}`);
+      });
 
     }
+
+  }
+
+
+  process(entry, type) {
+    let tmdb = undefined;
+
+    if ( entry.TmdbId && !entry.TmdbId.startsWith('id-') ) {
+      tmdb = entry.TmdbId;
+    }
+
+    console.log(`${this.JobName} processing "${entry.Name} (${entry.Year}) [${type}]"`);
+
+    return API.searchEntity(type, entry.Name, entry.Year, tmdb).then( (data) => {
+      data = JSON.parse(data);
+      data = data[0];
+
+      if ( data ) {
+        // entity already exists
+        // TODO: check seasons, episodes, mediafiles
+        console.log(`${this.JobName} "${entry.Name} (${entry.Year}) [${type}]" already exists: ${data.ID}`);
+
+        return this.manageExistingEntry(entry, data, type); // .then( resolve ).catch( reject );
+
+      } else {
+        // entity not exists
+
+        return API.createEntity(
+          type,
+          `${entry.TmdbId} - ${entry.Name}`, JSON.stringify(entry)
+        )
+          .then( (entry_Str) => {
+
+            let savedEntry = JSON.parse(entry_Str);
+
+            console.log(`${this.JobName} saved to db:  ${entry.Name} -> ${savedEntry.ID}`);
+
+          })
+      }
+    })
+    .catch( (e) => {
+      console.log(`${this.JobName} ERROR saving to DB ${e.message} - ${( (e.stack && e.stack.split('\n')) || []).shift()}`);
+      throw e;
+    });
+
+  }
+
+
+  manageExistingEntry(movie, entry, type) {
+
+    return new Promise( (resolve, reject) => {
+
+      let ps = [];
+
+      if ( movie.Seasons && movie.Seasons.length > 0 ) {
+        // maybe a tvshows
+        console.log(`${this.JobName} [${entry.ID}] looping seasons`);
+
+        for ( let movieSeason of movie.Seasons ) {
+          let found = false;
+          for ( let entrySeason of entry.Seasons ) {
+
+            if ( movieSeason.Name ==  entrySeason.Name ) {
+              // season has been already created: updating
+              found = true;
+
+              // edit season creting episodes
+
+              ps.push( this.manageExistingSeason(entry, movieSeason, entrySeason, type) );
+              break;
+            }
+
+          }
+
+          if ( !found ) {
+            // season must be created on DB
+            ps.push( API.createSeason(type, entry.ID, `${movie.TmdbId} - ${movie.Name} - S${movieSeason.Reorder}`, JSON.stringify(movieSeason) ).then( (seas) => {
+              console.log(`${this.JobName} [${entry.ID}] season has been created: ${seas.ID} - ${seas.Name} (${seas.Year})`);
+            }) );
+          }
+
+        }
+
+      }
+
+      if ( movie.Mediafiles ) {
+        console.log(`${this.JobName} [${entry.ID}] looping mediafiles`);
+        for ( let movieMediafile of movie.Mediafiles ) {
+          let found = false;
+
+          for ( let entryMediafile of entry.Mediafiles ) {
+
+            if ( entryMediafile.Filename == movieMediafile.Filename ) {
+              found = true;
+              break;
+            }
+
+          }
+
+          if ( !found ) {
+            ps.push( this.createMediaFiles([movieMediafile], entry, null, null, type ) );
+          }
+
+        }
+      }
+
+      Promise.all(ps).then(resolve, reject);
+    });
+
+  }
+
+
+
+  manageExistingSeason(entry, movieSeason, entrySeason, type) {
+    return new Promise( (resolve, reject ) => {
+
+      let ps = [];
+
+      for ( let movieEpisode of movieSeason.Episodes ) {
+
+        let found = false;
+        for ( let entryEpisode of entrySeason.Episodes ) {
+
+          if ( movieEpisode.Reorder == entryEpisode.Reorder ) {
+            found = true;
+            ps.push( this.manageExistingEpisode( entry, entrySeason, movieEpisode, entryEpisode, type ) );
+            break;
+          }
+
+
+        }
+
+        if ( !found ) {
+          ps.push( API.createEpisode(type, entry.ID, entrySeason.ID, `${entry.TmdbId} - ${entry.Name} - S${entrySeason.Reorder}E${movieEpisode.Reorder}`, JSON.stringify(movieEpisode) ).then( (epdata) => {
+            epdata = JSON.parse(epdata);
+            console.log(`${this.JobName} [${entry.ID}] episode created: S${entrySeason.Reorder}E${movieEpisode.Reorder}`);
+          }) );
+        }
+
+
+      }
+
+      Promise.all(ps).then( resolve ).catch( reject );
+    });
+  }
+
+
+  manageExistingEpisode(entry, entrySeason, movieEpisode, entryEpisode, type) {
+
+    return new Promise( (resolve, reject) => {
+      let ps = [];
+
+      for ( let movieMediafile of movieEpisode.Mediafiles ) {
+        let found = false;
+
+        for ( let entryMediafile of entryEpisode.Mediafiles ) {
+
+          if ( entryMediafile.Filename == movieMediafile.Filename ) {
+            found = true;
+            break;
+          }
+
+        }
+
+        if ( !found ) {
+          ps.push( this.createMediaFiles([movieMediafile], entry, entrySeason, entryEpisode, type ) );
+        }
+
+      }
+
+      Promise.all(ps).then( resolve ).catch( reject );
+    });
 
 
   }
 
 
-  saveToDB() {
+  createMediaFiles(mfs, entry, season, episode, type) {
+
+    let season_id = season ? season.ID : null;
+    let episode_id = episode ? episode.ID : null;
+
+    function saveMf() {
+      let mf = mfs.shift();
+      if ( mf ) {
+
+        // let postData = computeMovieData( mf, entry, season );
+
+        return API.createMediaFile( type, entry.ID, season_id, episode_id, mf.Filename, JSON.stringify(mf) )
+          .then( saveMf );
+
+       }  else {
+
+        return Promise.resolve();
+
+      }
+    }
+
+    return saveMf();
 
   }
 

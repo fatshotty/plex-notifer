@@ -1,9 +1,16 @@
 const {Config} = require('./utils');
 const Telegram = require('slimbot');
 
-const Slimbot = new Telegram(Config.TELEGRAM_BOT_ID);
-const SlimbotLog = new Telegram(Config.TELEGRAM_LOG_BOT_ID);
+let Slimbot = null;
+let SlimbotLog = null;
 
+if ( Config.TELEGRAM_BOT_ID ) {
+  Slimbot = new Telegram(Config.TELEGRAM_BOT_ID);
+}
+
+if ( Config.TELEGRAM_LOG_BOT_ID ) {
+  SlimbotLog = new Telegram(Config.TELEGRAM_LOG_BOT_ID);
+}
 
 let queue = [];
 let FREE = true;
@@ -52,17 +59,28 @@ function _send(posterUrl, html) {
       })
       .catch( (e) => {
         console.log(`[ERROR telegram] ${title} ${!isUrl ? '(buff)' : ''} - ${e.message}`);
-        SlimbotLog.sendMessage(Config.TELEGRAM_LOG_CHAT_ID, `[Noty-Error] ${title} ${!isUrl ? '(buff)' : ''} - ${e.message}`, {
-          parse_mode: "html",
-          disable_web_page_preview: false,
-          disable_notification: false
-        });
+        report( `${title} ${!isUrl ? '(buff)' : ''} - ${e.message}` );
         resolve();
       });
   })
 }
 
+
+
+function report(str) {
+  if ( SlimbotLog ) {
+    SlimbotLog.sendMessage(Config.TELEGRAM_LOG_CHAT_ID, `[Noty-Error] @fatshotty ${str}`, {
+      disable_web_page_preview: true,
+      disable_notification: false
+    });
+  } else {
+    console.error(`[Noty-Error]`, str);
+  }
+}
+
+
 module.exports = {
   Enabled: Config.TELEGRAM_BOT_ID && Config.TELEGRAM_CHAT_ID,
-  publish
+  publish,
+  report
 };

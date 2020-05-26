@@ -133,56 +133,56 @@ class Job extends EventEmitter {
       return items;
     })
 
-    .then( (items) => {
+    // .then( (items) => {
 
-      // GOT data scraped
-      // Compile template
+    //   // GOT data scraped
+    //   // Compile template
 
-      let ps = [];
-      for ( let item of items ) {
-        let obj = {
-          plexItem: item.plexItem || {},
-          scraped: item.scraped || {}
-        };
-        try {
-          console.log(`${this.JobName} try to notify - ${obj.scraped.Name || item.plexItem.title}`);
-          let compiledTemplate = Templates[`template_${this.plexlibrary.Key}`](obj, this.plexlibrary);
-          ps.push(  compiledTemplate ); // Promise.resolve({poster: obj.scraped.Poster, html: compiledTemplate}) );
-        } catch( e ) {
-          console.log(`[ERROR pug] ${this.JobName} ${e.message}`);
-        }
+    //   let ps = [];
+    //   for ( let item of items ) {
+    //     let obj = {
+    //       plexItem: item.plexItem || {},
+    //       scraped: item.scraped || {}
+    //     };
+    //     try {
+    //       console.log(`${this.JobName} try to notify - ${obj.scraped.Name || item.plexItem.title}`);
+    //       let compiledTemplate = Templates[`template_${this.plexlibrary.Key}`](obj, this.plexlibrary);
+    //       ps.push(  compiledTemplate ); // Promise.resolve({poster: obj.scraped.Poster, html: compiledTemplate}) );
+    //     } catch( e ) {
+    //       console.log(`[ERROR pug] ${this.JobName} ${e.message}`);
+    //     }
 
-      }
+    //   }
 
-      return Promise.all(ps);
-    })
+    //   return Promise.all(ps);
+    // })
 
-    .then( (templates) => {
+    // .then( (templates) => {
 
-      let ps = [];
-      for ( let template of templates ) {
+    //   let ps = [];
+    //   for ( let template of templates ) {
 
-        // console.log(`**** template ****`);
-        // console.log(template.html);
+    //     // console.log(`**** template ****`);
+    //     // console.log(template.html);
 
-        if ( TelegramBot.Enabled ) {
+    //     if ( TelegramBot.Enabled ) {
 
-          ps.push( TelegramBot.publish( template.poster, template.html ) );
+    //       ps.push( TelegramBot.publish( template.poster, template.html ) );
 
-        } else {
-          ps.push( new Promise( (resolve, reject) => {
-            console.log(`**** ${this.JobName} `);
-            console.log( template.html );
-            resolve();
-          }) )
-        }
+    //     } else {
+    //       ps.push( new Promise( (resolve, reject) => {
+    //         console.log(`**** ${this.JobName} `);
+    //         console.log( template.html );
+    //         resolve();
+    //       }) )
+    //     }
 
-      }
+    //   }
 
 
-      return Promise.all( ps );
+    //   return Promise.all( ps );
 
-    })
+    // })
 
     .then( () => {
       this.onComplete(null);
