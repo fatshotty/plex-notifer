@@ -27,14 +27,27 @@ function search(terms, year, type='movie') {
     data.year = year;
   }
   return TmdbCli.get(`search/${type || 'multi'}`, data).then( (obj) => {
-    let results = obj.results;
-    results = results.filter((movie) => {
+    let termsClean = terms.replace(/[^\w|\s]/g, '');
+
+    let results = obj.results.filter((movie) => {
       let checkYear = true;
       if ( year ) {
         checkYear = (movie.releaseDate || movie.firstAirDate || '').substring(0, 4) == year;
       }
       return ( (movie.title || movie.originalName || '').toLowerCase() == terms.toLowerCase()) && checkYear;
     });
+
+    if ( results.length == 0 ) {
+      results = obj.results.filter( (movie) => {
+        let movie_name = (movie.title || movie.originalName).replace(/[^\w|\s]/g, '');
+        let checkYear = true;
+        if ( year ) {
+          checkYear = (movie.releaseDate || movie.firstAirDate || '').substring(0, 4) == year;
+        }
+        return ( (movie_name|| '').toLowerCase() == termsClean.toLowerCase()) && checkYear;
+      });
+    }
+
     return {results};
   }).catch( (e) => {
     console.error(`[ERROR tmdb-search] ${e.message}`);

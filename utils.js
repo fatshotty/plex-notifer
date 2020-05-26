@@ -34,6 +34,8 @@ const Config = {
 
   PLOT_LIMIT: parseInt(process.env.PLOT_LIMIT || 0, 10),
 
+  ROOT_MEDIA_FOLDER: process.env.ROOT_MEDIA_FOLDER,
+
   ConfigFile: {}
 };
 
