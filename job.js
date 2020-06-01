@@ -65,8 +65,6 @@ class Job extends EventEmitter {
 
       console.log(`${this.JobName} ${items.length} recently added`);
 
-      this.emit('gotitems', items);
-
       return items;
 
     })
@@ -117,7 +115,10 @@ class Job extends EventEmitter {
 
       }
 
-      return Promise.all(ps);
+      return Promise.all(ps).then( (resp) => {
+        this.emit('gotitems', items);
+        return resp;
+      });
     })
 
     .then( (templates) => {
