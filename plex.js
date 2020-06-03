@@ -57,13 +57,18 @@ class PlexLibrary {
       // if ( MediaContainer.librarySectionID != 7 ) return [];
 
       let items = MediaContainer.Metadata || [];
+      console.log(`[${this.Name} (${this.Key})] found ${items.length} recently added`);
 
-      items = this.remapData( items );
+      let remappedItems = this.remapData( items );
 
-      return items.filter( (item) => {
+      console.log(`[${this.Name} (${this.Key})] remapped in ${remappedItems.length} recently added`);
 
+      let sortedRemappedItems = remappedItems.sort( (item1, item2) => {
+        return item1.addedAt > item2.addedAt ? 1 : -1;
+      });
+
+      return sortedRemappedItems.filter( (item) => {
         return item.addedAt > this.LastScan; // && item.key == '/library/metadata/42317';
-
       }).sort( (item1, item2) => {
         return item1.addedAt > item2.addedAt ? 1 : -1;
       });
