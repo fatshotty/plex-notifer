@@ -27,22 +27,34 @@ function search(terms, year, type='movie') {
     data.year = year;
   }
   return TmdbCli.get(`search/${type || 'multi'}`, data).then( (obj) => {
-    let termsClean = terms.replace(/[^\w|\s]/g, '');
+    let termsClean = terms.replace(/[^\w|\s]/g, '').replace( /\s\s+/gi, ' ').trim();
 
     let results = obj.results.filter((movie) => {
       let checkYear = true;
       if ( year ) {
         checkYear = (movie.releaseDate || movie.firstAirDate || '').substring(0, 4) == year;
       }
-      return ( (movie.title || movie.originalName || '').toLowerCase() == terms.toLowerCase()) && checkYear;
+      return ( (movie.title || movie.name || movie.originalTitle || movie.originalName || '').toLowerCase() == terms.toLowerCase()) && checkYear;
     });
 
     if ( results.length == 0 ) {
       results = obj.results.filter( (movie) => {
-        let movie_name = (movie.title || movie.originalName).replace(/[^\w|\s]/g, '');
+        let movie_name = (movie.title || movie.name || movie.originalTitle || movie.originalName || '').replace(/[^\w|\s]/g, '').replace( /\s\s+/gi, ' ').trim();
         let checkYear = true;
         if ( year ) {
           checkYear = (movie.releaseDate || movie.firstAirDate || '').substring(0, 4) == year;
+        }
+        return ( (movie_name|| '').toLowerCase() == termsClean.toLowerCase()) && checkYear;
+      });
+    }
+
+    if ( results.length == 0 ) {
+      results = obj.results.filter( (movie) => {
+        let movie_name = (movie.title || movie.name || movie.originalTitle || movie.originalName || '').replace(/[^\w|\s]/g, '').replace( /\s\s+/gi, ' ').trim();
+        let checkYear = true;
+        if ( year ) {
+          let m_year = parseInt( (movie.releaseDate || movie.firstAirDate || '').substring(0, 4), 10);
+          checkYear = m_year >= (year - 1) || m_year <= (year + 1);
         }
         return ( (movie_name|| '').toLowerCase() == termsClean.toLowerCase()) && checkYear;
       });

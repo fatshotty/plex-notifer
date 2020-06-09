@@ -142,6 +142,11 @@ module.exports = function({scraped, plexItem}, {Name}) {
     }).filter( m => !!m ).map( m => Number(m) ).filter( n => !!n ).sort( (n1, n2) => n1 > n2 ? 1 : -1).join( ' - ');
 
 
+  let studios = '';
+  if ( scraped.data && scraped.data.networks && scraped.data.networks.length > 0 ) {
+    studios = scraped.data.networks.map(n => n.name).filter(n => !!n).join(', ');
+  }
+
   // 🏅
 
   let str = [
@@ -154,6 +159,7 @@ module.exports = function({scraped, plexItem}, {Name}) {
     genres ? `<b>Genere:</b> ${genres}` : 'NO',
     writers ? `<b>Scritta da:</b> ${writers}` : 'NO',
     cast ? `<b>Cast:</b> ${cast}` : 'NO',
+    studios ? `<b>Studios:</b> ${studios}` : 'NO',
     '',
     resolution ? `<b>Risoluzione:</b> ${resolution}` : 'NO',
     audioCh ? `<b>Canali Audio:</b> ${audioCh}` : 'NO',

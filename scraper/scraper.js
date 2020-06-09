@@ -68,13 +68,20 @@ function wrapInfo(engine) {
 
       if ( imdbid ) {
         p = new Promise( (resolve, reject) => {
-          return ImdbCli.get({'id': imdbid}, {headers: { 'Accept-Language': 'it'}}).then( (imdb_data) => {
-            data.imdb_data = imdb_data;
-            return resolve(data);
-          }).catch( (e) => {
-            console.log(`[ERROR imdb-info] ${e.message}`);
-            resolve(data);
-          });
+          function redoSearchImdb() {
+            return ImdbCli.get({'id': imdbid}, {headers: { 'Accept-Language': 'it'}}).then( (imdb_data) => {
+              data.imdb_data = imdb_data;
+              return resolve(data);
+            }).catch( (e) => {
+              if ( e.statusCode == 401 && ALL_IMDB_KEY.length ) {
+                ImdbCli = new IMDB.Client({apiKey: ALL_IMDB_KEY.shift()});
+                redoSearchImdb().then( resolve ).catch(reject);
+              } else {
+                reject(e);
+              }
+            });
+          }
+          redoSearchImdb();
         });
       }
 
