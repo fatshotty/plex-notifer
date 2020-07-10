@@ -1,9 +1,20 @@
 
-console.log(`****** STARTING UP ${Date.now()} ******`);
+console.log(`****** STARTING UP ${new Date().toISOString()} ******`);
 
 const {Config, saveConfig} = require('./utils');
 const {PlexQuery} = require('./plex');
 const Job = require('./job');
+
+
+
+let _console_log = console.log;
+
+console.log = function() {
+  let args = Array.prototype.slice.call(arguments, 0);
+  args.shift( `(${new Date().toISOString()}) -`);
+  _console_log.apply(console, args);
+};
+
 
 
 let libraries = Config.ConfigFile.Libraries || {};
