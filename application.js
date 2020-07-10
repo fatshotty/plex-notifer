@@ -11,7 +11,7 @@ let _console_log = console.log;
 
 console.log = function() {
   let args = Array.prototype.slice.call(arguments, 0);
-  args.shift( `(${new Date().toISOString()}) -`);
+  args.unshift( `(${new Date().toISOString()}) -`);
   _console_log.apply(console, args);
 };
 
