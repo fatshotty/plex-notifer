@@ -150,10 +150,10 @@ class PlexLibrary {
 
       let res = {};
       for ( let item of items ) {
-
-        let movie = res[ item.title.toLowerCase() ];
+        let year = item.year || 0;
+        let movie = res[ `${item.title.toLowerCase()}-${year}` ];
         if ( !movie ) {
-          movie = res[ item.title.toLowerCase() ] = JSON.parse(JSON.stringify(item) );
+          movie = res[ `${item.title.toLowerCase()}-${year}` ] = JSON.parse(JSON.stringify(item) );
           movie.Media = [];
         }
 
