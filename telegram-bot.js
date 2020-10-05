@@ -62,7 +62,18 @@ function _send(posterUrl, html) {
   })
 }
 
+
+function sendError(title, err) {
+  SlimbotLog.sendMessage(Config.TELEGRAM_LOG_CHAT_ID, `[Noty-Error] ${title} - ${err.message}`, {
+    parse_mode: "html",
+    disable_web_page_preview: false,
+    disable_notification: false
+  });
+}
+
+
 module.exports = {
   Enabled: Config.TELEGRAM_BOT_ID && Config.TELEGRAM_CHAT_ID,
-  publish
+  publish,
+  sendError
 };

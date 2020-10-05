@@ -36,6 +36,8 @@ const Config = {
 
   ROOT_MEDIA_FOLDER: process.env.ROOT_MEDIA_FOLDER,
 
+  HEALT_CHECK_CRON: process.env.HEALT_CHECK_CRON,
+
   ConfigFile: {}
 };
 

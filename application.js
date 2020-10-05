@@ -6,6 +6,14 @@ const {PlexQuery} = require('./plex');
 const Job = require('./job');
 
 
+const HealtCheckJob = require('./health-check');
+
+
+const HealtCheck = new HealtCheckJob({
+  jobschedule: Config.HEALT_CHECK_CRON
+});
+
+
 
 let _console_log = console.log;
 
@@ -77,5 +85,7 @@ PlexQuery('/library/sections').then( (results) => {
   for ( let job of jobs ) {
     job.start();
   }
+
+  HealtCheck.start();
 
 });
