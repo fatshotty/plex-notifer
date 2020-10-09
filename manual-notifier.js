@@ -133,5 +133,4 @@ PlexQuery('/library/sections').then( (results) => {
 }).then( () => {
 
   console.log('completed!');
-  process.exit(0);
 })
