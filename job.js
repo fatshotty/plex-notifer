@@ -197,7 +197,10 @@ class Job extends EventEmitter {
           if ( first ) {
             Scraper[ scraper ].getInfo(first.id, type).then( (klass) => {
               resolve( {scraped: klass, plexItem} );
-            })
+            }).catch( (err) => {
+              console.error( `${this.JobName} - ${title} (${year}) - error during 'getInfo' - ${err.message}` );
+              return resolve( {scraped: null, plexItem} );
+            });
           } else {
             // force to catch error on 'catch' function
             throw new Error(`not found on ${scraper}`);
