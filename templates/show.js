@@ -127,12 +127,18 @@ module.exports = function({scraped, plexItem}, {Name}) {
     }
   }
 
-  let mediaData = plexItem.Media.map( extractMediaData );
-  let resolution = mediaData.map( res => res.videoRes ).filter( res => !!res );
-  let audioCh = mediaData.map( res => res.audioCh ).filter( res => !!res );
 
-  resolution = [... (new Set( resolution ) ) ].join(' / ');
-  audioCh = [... (new Set( audioCh )  ) ].join(' / ');
+  let resolution = '';
+  let audioCh = '';
+
+  if ( plexItem.Media ) {
+    let mediaData = plexItem.Media.map( extractMediaData );
+    resolution = mediaData.map( res => res.videoRes ).filter( res => !!res );
+    audioCh = mediaData.map( res => res.audioCh ).filter( res => !!res );
+
+    resolution = [... (new Set( resolution ) ) ].join(' / ');
+    audioCh = [... (new Set( audioCh )  ) ].join(' / ');
+  }
 
   let seasons = plexItem.Seasons && Object.keys(plexItem.Seasons).map( (s) => {
       let match = s.match( /\s(\d+)$/i )

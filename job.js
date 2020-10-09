@@ -30,6 +30,10 @@ class Job extends EventEmitter {
 
     this.plexlibrary = new PlexLibrary( this.options );
 
+    if ( this.options._manual ) {
+      return;
+    }
+
     this._job = new CronJob(
       this.options.jobschedule,    // schedule
       this.execute.bind(this),     // onTick
@@ -67,9 +71,28 @@ class Job extends EventEmitter {
 
       return items;
 
+    }).then( (items) => {
+
+      return this.executeScrapeAndNotify(items)
+
     })
 
-    .then( (items) => {
+    .then( () => {
+      this.onComplete(null);
+    })
+
+    .catch( (e) => {
+      this.onComplete(e);
+    });
+
+
+  }
+
+
+
+  executeScrapeAndNotify( _items ) {
+
+    return new Promise( (resolve, reject) => {
       // GOT items details
       // scrape via TMDB/TVDB
 
@@ -77,7 +100,7 @@ class Job extends EventEmitter {
 
       if ( Config.PLEX_LIBRARY_SKIP_SCRAPE.indexOf( this.plexlibrary.Key) > -1 ) {
         console.log(`${this.JobName} skip scraper`);
-        return items.map( i => ({plexItem: i}) );
+        return resolve( _items.map( i => ({plexItem: i}) ) );
       }
 
       let ps = [];
@@ -87,11 +110,11 @@ class Job extends EventEmitter {
         _scraper_type = 'tv';
       }
 
-      for ( let plexItem of items ) {
+      for ( let plexItem of _items ) {
         ps.push( this.scrape( plexItem, _scraper_type ) );
       }
 
-      return ps.length ? Promise.all(ps) : [];
+      ps.length ? Promise.all(ps).then(resolve) : resolve([]) ;
     })
 
     .then( (items) => {
@@ -147,17 +170,8 @@ class Job extends EventEmitter {
       return Promise.all( ps );
 
     })
-
-    .then( () => {
-      this.onComplete(null);
-    })
-
-    .catch( (e) => {
-      this.onComplete(e);
-    });
-
-
   }
+
 
   scrape(plexItem, type) {
 
