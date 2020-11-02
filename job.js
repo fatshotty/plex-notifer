@@ -133,7 +133,7 @@ class Job extends EventEmitter {
           let compiledTemplate = Templates[`template_${this.plexlibrary.Key}`](obj, this.plexlibrary);
           ps.push(  compiledTemplate ); // Promise.resolve({poster: obj.scraped.Poster, html: compiledTemplate}) );
         } catch( e ) {
-          console.log(`[ERROR pug] ${this.JobName} ${e.message}`);
+          console.log(`[ERROR pug] ${this.JobName} ${e.message}`, e);
         }
 
       }
