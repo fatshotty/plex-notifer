@@ -159,7 +159,7 @@ module.exports = function({scraped, plexItem}, {Name}) {
     `📺 <b>${scraped.Title || plexItem.title}</b>`,
     `<i>aggiunto in ${Name}</i>`,
     '',
-    seasons.length ? `<b>Stagion${seasons.length > 1 ? 'i' : 'e'}i:</b> ${seasons.join( ' - ')}` : 'NO',
+    seasons.length ? `<b>Stagion${seasons.length > 1 ? 'i' : 'e'}:</b> ${seasons.join( ' - ')}` : 'NO',
     seasons.length ? '' : 'NO', // empty line if seasons exist
     year ? `<b>Anno:</b> ${year}` : 'NO',
     genres ? `<b>Genere:</b> ${genres}` : 'NO',
