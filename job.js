@@ -210,7 +210,13 @@ class Job extends EventEmitter {
           }
         }).catch( (e) => {
           console.error( `${this.JobName} - ${title} (${year}) ${e.message}` );
-          fn_scrape();
+          if ( type === 'movie' ) {
+            // in case of movie: stop looping scraper
+            return resolve( {scraped: null, plexItem} );
+          } else {
+            // in case of tv-shows
+            fn_scrape();
+          }
         });
       }
 
