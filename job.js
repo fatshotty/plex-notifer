@@ -134,6 +134,9 @@ class Job extends EventEmitter {
           ps.push(  compiledTemplate ); // Promise.resolve({poster: obj.scraped.Poster, html: compiledTemplate}) );
         } catch( e ) {
           console.log(`[ERROR pug] ${this.JobName} ${e.message}`, e);
+          if ( TelegramBot.Enabled ) {
+            TelegramBot.sendError( `Pug ${this.JobName} - ${obj.scraped.Name || item.plexItem.title}`, e.stack);
+          }
         }
 
       }
