@@ -29,16 +29,16 @@ class Entity {
   }
 
   get Cast() {
-    let cast = (this.data.credits.cast || []).sort( (c1, c2) => {return c1.order > c2.order ? 1 : -1} )
+    let cast = ((this.data.credits && this.data.credits.cast) || []).sort( (c1, c2) => {return c1.order > c2.order ? 1 : -1} )
     return cast.map( c => c.name );
   }
 
   get Directors() {
-    return (this.data.credits.crew || []).filter(c => c.job == "Director").map( c => c.name );
+    return ((this.data.credits && this.data.credits.crew) || []).filter(c => c.job == "Director").map( c => c.name );
   }
 
   get Writers() {
-    return (this.data.credits.crew || []).filter(c => c.department == "Writing").map( c => c.name );
+    return ((this.data.credits && this.data.credits.crew) || []).filter(c => c.department == "Writing").map( c => c.name );
   }
 
   get Vote() {
