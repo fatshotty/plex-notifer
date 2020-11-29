@@ -71,9 +71,17 @@ function sendError(title, err) {
   });
 }
 
+function publishHtml(html) {
+  Slimbot.sendMessage(Config.TELEGRAM_CHAT_ID, html, {
+    parse_mode: "html",
+    disable_web_page_preview: false,
+    disable_notification: false
+  });
+}
 
 module.exports = {
   Enabled: Config.TELEGRAM_BOT_ID && Config.TELEGRAM_CHAT_ID,
   publish,
-  sendError
+  sendError,
+  publishHtml
 };

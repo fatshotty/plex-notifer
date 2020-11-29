@@ -7,5 +7,7 @@ module.exports = {
   template_27: require('./show'),
 
   template_25: require('./videos_collections'),
-  template_16: require('./videos')
+  template_16: require('./videos'),
+  template_mounted: require('./mantainance').mounted,
+  template_umounted: require('./mantainance').unmounted
 };

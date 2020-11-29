@@ -81,7 +81,7 @@ PlexQuery('/library/sections').then( (results) => {
 
         rl.close();
 
-        number = parseInt(number, 10) - 1;
+        number = parseInt(number, 10); // - 1;
         if ( number && !isNaN(number) ) {
           if ( number < items.length ) {
             return resolve( {directories, items: [ items[number] ]  } );
