@@ -34,7 +34,12 @@ class HealthCheck extends EventEmitter {
 
   checkMounted() {
     let folder = Config.ROOT_MEDIA_FOLDER;
-    return FS.existsSync(folder);
+    try {
+      return FS.existsSync(folder);
+    } catch(e) {
+      console.log(this.JobName, 'folder exists error', e);
+      return false;
+    }
   }
 
 
@@ -95,7 +100,7 @@ class HealthCheck extends EventEmitter {
   }
 
 
-  checkMountReMount() {
+  checkMountReMount(admin) {
 
     console.log(this.JobName, '...check mounting fo folder...');
 
@@ -123,7 +128,11 @@ class HealthCheck extends EventEmitter {
 
 
     if ( TelegramBot.Enabled ) {
-      TelegramBot.publishHtml( compiledTemplate );
+      if ( admin ) {
+        TelegramBot.sendError(`mount folder ${folderIsMounted ? 'OK' : '*FAIL*'}` , new Error(folderIsMounted ? 'correctly mounted' : 'UMOUNTED') );
+      } else {
+        TelegramBot.publishHtml( compiledTemplate );
+      }
     } else {
       console.log(`**** ${this.JobName} `);
       console.log( compiledTemplate );
@@ -138,6 +147,7 @@ class HealthCheck extends EventEmitter {
     this.numberOfLoop = LIMIT_LOOP;
     this._execute();
 
+    this.checkMountReMount(true);
 
   }
 
