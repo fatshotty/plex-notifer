@@ -131,6 +131,12 @@ class HealthCheck extends EventEmitter {
 
 
     if ( TelegramBot.Enabled ) {
+      if (!admin) {
+        TelegramBot.publishHtml( compiledTemplate );
+        // force admin=true in order to send action into monitor-chat
+        admin = true;
+      }
+
       if ( admin ) {
 
         if ( folderIsMounted ) {
@@ -143,8 +149,6 @@ class HealthCheck extends EventEmitter {
           TelegramBot.callbackMessage(title, msg, buttons, this.callbackForMountUnmount.bind(this) );
         }
 
-      } else {
-        TelegramBot.publishHtml( compiledTemplate );
       }
     } else {
       console.log(`**** ${this.JobName} `);
