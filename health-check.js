@@ -7,6 +7,7 @@ const Chokidar = require('chokidar');
 const Path = require('path');
 const FS = require('fs');
 const Templates = require('./templates/index');
+const ChildProcess = require('child_process');
 
 const LIMIT_LOOP = 6;
 const LIMIT_LOOP_SECONDS = 10;
@@ -88,14 +89,14 @@ class HealthCheck extends EventEmitter {
       if ( tmrMount ) {
         clearTimeout(tmrMount);
       }
-      tmrMount = setTimeout( this.checkMountReMount.bind(this), 1000);
+      tmrMount = setTimeout( this.checkMountReMount.bind(this, false), 1000);
     });
 
     this.Watcher.on('unlinkDir', (evt, data) => {
       if ( tmrUMount ) {
         clearTimeout(tmrUMount);
       }
-      tmrUMount = setTimeout( this.checkMountReMount.bind(this), 1000);
+      tmrUMount = setTimeout( this.checkMountReMount.bind(this, false), 1000);
     });
   }
 
@@ -110,7 +111,9 @@ class HealthCheck extends EventEmitter {
       return;
     }
 
-    this.RootFolderMounted = folderIsMounted;
+    if ( !admin ) {
+      this.RootFolderMounted = folderIsMounted;
+    }
 
     console.log(this.JobName, 'folder seems to be changed: now it is', folderIsMounted ? 'MOUNTED' : 'UNMOUNTED');
 
@@ -129,7 +132,17 @@ class HealthCheck extends EventEmitter {
 
     if ( TelegramBot.Enabled ) {
       if ( admin ) {
-        TelegramBot.sendError(`mount folder ${folderIsMounted ? 'OK' : '*FAIL*'}` , new Error(folderIsMounted ? 'correctly mounted' : 'UMOUNTED') );
+
+        if ( folderIsMounted ) {
+          TelegramBot.sendError(`mount folder OK` , new Error('correctly mounted') );
+        } else {
+          let title = `mount folder *FAIL*`, msg = 'UNMOUNTED';
+
+          let buttons = this.createAdminButtonsForMountUnmount();
+
+          TelegramBot.callbackMessage(title, msg, buttons, this.callbackForMountUnmount.bind(this) );
+        }
+
       } else {
         TelegramBot.publishHtml( compiledTemplate );
       }
@@ -171,6 +184,27 @@ class HealthCheck extends EventEmitter {
       setTimeout(this._execute.bind(this), LIMIT_LOOP_SECONDS * 1000);
 
     });
+  }
+
+
+  createAdminButtonsForMountUnmount() {
+    return [{text: 're-mount', action: 'mount'}];
+  }
+  callbackForMountUnmount(data) {
+    if ( data == 'mount' ) {
+      // spawn unmount and mount
+      console.log(`try to umount-mount`);
+      ChildProcess.exec(Config.REMOUNT_COMMAND, (error, stdout, stderr) => {
+        if (error) {
+          console.error(`exec error: ${error}`);
+          TelegramBot.sendError(`remount command` , new Error(String(error)) );
+          return;
+        }
+        console.log(`stdout: ${stdout}`);
+        console.error(`stderr: ${stderr}`);
+        TelegramBot.sendError(`remount command` , new Error(stderr || stdout) );
+      });
+    }
   }
 
 }

@@ -11,6 +11,8 @@ const Config = {
 
   CRON: process.env.CRON,
 
+  REMOUNT_COMMAND: process.env.REMOUT_COMMAND,
+
   TEMP_DIR: Path.normalize(process.env.TEMP_DIR || __dirname),
   TEMPLATE_DIR: Path.join( __dirname, 'templates'),
 

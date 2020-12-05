@@ -79,9 +79,57 @@ function publishHtml(html) {
   });
 }
 
+
+function callbackMessage(title, msg, buttons, cb) {
+  let params = {
+    parse_mode: 'html',
+    reply_markup: JSON.stringify({
+      inline_keyboard: [buttons.map( (btn) => {
+        return { text: btn.text, callback_data: btn.action }
+      })]
+    }),
+    disable_web_page_preview: false,
+    disable_notification: false
+  };
+
+
+  SlimbotLog.off('callback_query');
+  if ( cb ) {
+    SlimbotLog.on('callback_query', query => {
+      console.log(`[INFO telegram] ${title} - ${msg} GOT BUTTON PRESSED: ${query.data}`);
+      if ( !cb ) {
+        console.log(`[WARN telegram] ${title} - ${msg} NO ACTION FOR: ${query.data}`);
+      } else {
+        cb( query.data );
+      }
+      setTimeout(resetCallbackQuery, 1000);
+    });
+  }
+  SlimbotLog.sendMessage(Config.TELEGRAM_LOG_CHAT_ID, `[Noty-Error] ${title} - ${msg}`, params);
+}
+
+let BotAdminEnabled = !!(Config.TELEGRAM_LOG_BOT_ID && Config.TELEGRAM_LOG_CHAT_ID);
+if (BotAdminEnabled) {
+  SlimbotLog.startPolling();
+}
+
+
+function resetCallbackQuery() {
+  SlimbotLog.off('callback_query');
+  SlimbotLog.on('callback_query', query => {
+    SlimbotLog.sendMessage(Config.TELEGRAM_LOG_CHAT_ID, `*no callback enabled*`, {
+      parse_mode: "html",
+      disable_web_page_preview: false,
+      disable_notification: true
+    });
+  });
+}
+
 module.exports = {
-  Enabled: Config.TELEGRAM_BOT_ID && Config.TELEGRAM_CHAT_ID,
+  Enabled: !!(Config.TELEGRAM_BOT_ID && Config.TELEGRAM_CHAT_ID),
+  BotAdminEnabled,
   publish,
   sendError,
-  publishHtml
+  publishHtml,
+  callbackMessage
 };
