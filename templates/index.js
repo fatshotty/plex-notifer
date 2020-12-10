@@ -1,8 +1,8 @@
 module.exports = {
   template_7: require('./movie'),
   template_14: require('./movie'),
-  template_28: require('./movie'),
-  template_29: require('./movie'),
+  template_30: require('./movie'),
+  template_31: require('./movie'),
 
   template_9: require('./show'),
   template_13: require('./show'),
