@@ -26,6 +26,7 @@ function extractMediaData(media) {
   filename = Path.basename( filename );
 
   let lastIndex = filename.lastIndexOf('-');
+  let _filename = filename.substring(0, lastIndex);
   let details = filename.substring(lastIndex + 1).trim();
 
 
@@ -49,7 +50,7 @@ function extractMediaData(media) {
     console.error(`[Template] cannot extract mediadata from ${filename} - ${e.message}` );
   }
 
-  return {videoRes, audioCh};
+  return {videoRes, audioCh, filename: _filename};
 }
 
 
@@ -58,6 +59,7 @@ module.exports = function({scraped, plexItem}, {Name}) {
   let mediaData = plexItem.Media.map( extractMediaData );
   let resolution = mediaData.map( res => res.videoRes ).filter( res => !!res );
   let audioCh = mediaData.map( res => res.audioCh ).filter( res => !!res );
+  let filenames = mediaData.map( res => res.filename ).filter( res => !!res );
 
   resolution = [... (new Set( resolution ) ) ].join(' / ');
   audioCh = [... (new Set( audioCh )  ) ].join(' / ');
@@ -65,6 +67,8 @@ module.exports = function({scraped, plexItem}, {Name}) {
   let str = [
     `📼 <b>${plexItem.title}</b>`,
     `<i>aggiunto in ${Name}</i>`,
+    '',
+    filenames.map(f => `<i>- ${f}</i>`).join('\n'),
     '',
     `<b>Collezione:</b> ${plexItem.Media.length} video`,
     resolution ? `<b>Risoluzione:</b> ${resolution}` : 'NO',
