@@ -54,12 +54,25 @@ function extractMediaData(media) {
 }
 
 
-module.exports = function({scraped, plexItem}, {Name}) {
+module.exports = function({scraped, plexItem}, {Name, LastScan}) {
 
   let mediaData = plexItem.Media.map( extractMediaData );
   let resolution = mediaData.map( res => res.videoRes ).filter( res => !!res );
   let audioCh = mediaData.map( res => res.audioCh ).filter( res => !!res );
   let filenames = mediaData.map( res => res.filename ).filter( res => !!res );
+
+  if ( plexItem.title ) {
+    let title = plexItem.title.toLowerCase();
+    filenames = filenames.map((filen) => {
+      let fn = filen.toLowerCase();
+      if ( fn.indexOf(title) == 0 ) {
+        filen = filen.substring(title.length).trim();
+      }
+      return filen;
+    })
+    .map(fn => fn.startsWith('-') ? fn.substring(1).trim() : fn)
+    .filter( res => !!res );
+  }
 
   resolution = [... (new Set( resolution ) ) ].join(' / ');
   audioCh = [... (new Set( audioCh )  ) ].join(' / ');
@@ -68,7 +81,7 @@ module.exports = function({scraped, plexItem}, {Name}) {
     `📼 <b>${plexItem.title}</b>`,
     `<i>aggiunto in ${Name}</i>`,
     '',
-    filenames.map(f => `<i>- ${f}</i>`).join('\n'),
+    filenames.map(f => `<i>${f}</i>`).join('\n'),
     '',
     `<b>Collezione:</b> ${plexItem.Media.length} video`,
     resolution ? `<b>Risoluzione:</b> ${resolution}` : 'NO',
