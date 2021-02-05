@@ -54,25 +54,86 @@ function extractMediaData(media) {
 }
 
 
+function extractFilename(media) {
+  let part = media.Part[0];
+  return {
+    key: part.key,
+    filename: Path.basename(part.file, Path.extname(part.file))
+  };
+
+}
+
+
+function computeFilename(file, pTitle, lastScan) {
+
+  let keyParts = file.key.split('/');
+  let timestamp = Number(keyParts.pop() && keyParts.pop());
+
+  if ( timestamp < lastScan) {
+    return null;
+  }
+
+
+  if ( pTitle ) {
+    let title = pTitle.toLowerCase();
+    let filen = file.filename;
+    let fn = filen.toLowerCase();
+    if ( fn.indexOf(title) == 0 ) {
+      filen = filen.substring(title.length).trim();
+    }
+    file.filename = filen.startsWith('-') ? filen.substring(1).trim() : filen;
+  }
+
+  return file.filename;
+
+
+}
+
 module.exports = function({scraped, plexItem}, {Name, LastScan}) {
 
+
+  // let p_poster = new Promise( (resolve, reject) => {
+  //   if ( plexItem.thumb ) {
+
+  //     console.log(`[Template ${Name}] use thumnail ${plexItem.thumb}`);
+  //     PlexQuery(plexItem.thumb).then( (buff) => {
+  //       let fn = `./temp_thumb_${Date.now()}.png`;
+  //       FS.writeFileSync(fn, buff, {encoding: 'binary'});
+  //       let rs = FS.createReadStream(fn);
+  //       rs.on('end', () => {
+  //         FS.unlinkSync(fn);
+  //       });
+  //       resolve( rs );
+  //     });
+
+  //   }  else if ( plexItem.art ) {
+
+  //     console.log(`[Template ${Name}] use fanart ${plexItem.art}`);
+  //     PlexQuery(plexItem.art).then( (buff) => {
+  //       let fn = `./temp_art_${Date.now()}.png`;
+  //       FS.writeFileSync(fn, buff, {encoding: 'binary'});
+  //       let rs = FS.createReadStream(fn);
+  //       rs.on('end', () => {
+  //         FS.unlinkSync(fn);
+  //       });
+  //       resolve( rs );
+  //     });
+
+  //   } else {
+  //     resolve( '' );
+  //   }
+
+  // });
+
   let mediaData = plexItem.Media.map( extractMediaData );
+  let filenames = plexItem.Media.map(extractFilename);
   let resolution = mediaData.map( res => res.videoRes ).filter( res => !!res );
   let audioCh = mediaData.map( res => res.audioCh ).filter( res => !!res );
-  let filenames = mediaData.map( res => res.filename ).filter( res => !!res );
 
-  if ( plexItem.title ) {
-    let title = plexItem.title.toLowerCase();
-    filenames = filenames.map((filen) => {
-      let fn = filen.toLowerCase();
-      if ( fn.indexOf(title) == 0 ) {
-        filen = filen.substring(title.length).trim();
-      }
-      return filen;
-    })
-    .map(fn => fn.startsWith('-') ? fn.substring(1).trim() : fn)
-    .filter( res => !!res );
-  }
+
+  filenames = filenames.map( fn => computeFilename(fn, plexItem.title, LastScan) ).filter(Boolean);
+
+
 
   resolution = [... (new Set( resolution ) ) ].join(' / ');
   audioCh = [... (new Set( audioCh )  ) ].join(' / ');
@@ -81,16 +142,18 @@ module.exports = function({scraped, plexItem}, {Name, LastScan}) {
     `📼 <b>${plexItem.title}</b>`,
     `<i>aggiunto in ${Name}</i>`,
     '',
-    filenames.map(f => `<i>${f}</i>`).join('\n'),
-    '',
+    filenames.slice(0, 7).map(f => `<i>${f}</i>`).join('\n'),
+    filenames.length > 7 ? `<i>...altri ${filenames.length - 7}...</i>\n` : '',
     `<b>Collezione:</b> ${plexItem.Media.length} video`,
     resolution ? `<b>Risoluzione:</b> ${resolution}` : 'NO',
     audioCh ? `<b>Canali Audio:</b> ${audioCh}` : 'NO',
     Config.PC_NAME ? `- ${Config.PC_NAME} -` : 'NO'
   ]
 
-  return Promise.resolve( {
-    poster: null,
-    html: str.filter(row => row != 'NO').join('\n'),
-  });
+  // return p_poster.then( poster => {
+    return Promise.resolve( {
+      poster: null,
+      html: str.filter(row => row != 'NO').join('\n'),
+    });
+  // });
 }
