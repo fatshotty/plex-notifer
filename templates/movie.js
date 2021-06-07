@@ -136,7 +136,7 @@ module.exports = function({scraped, plexItem}, {Name}) {
     imdb_link = `<a href="https://www.imdb.com/title/${scraped.ImdbData.imdbid}">IMDB</a> ↗️ `;
     let vote = plexItem.rating || (scraped.ImdbData && scraped.ImdbData.rating) || scraped.Vote;
     if ( vote ) {
-      imdb_link +=  ` Voto: ${vote}`;
+      imdb_link +=  ` Voto: ${vote.toFixed(1)}`;
     }
   }
 

@@ -121,9 +121,13 @@ module.exports = function({scraped, plexItem}, {Name}) {
   let imdb_link = '';
   if ( scraped.ImdbData ) {
     imdb_link = `<a href="https://www.imdb.com/title/${scraped.ImdbData.imdbid}">IMDB</a> ↗️ `;
-    let vote = scraped.ImdbData ? scraped.ImdbData.rating : null;
+    // let vote = scraped.ImdbData ? scraped.ImdbData.rating : null;
+    // if ( vote ) {
+    //   imdb_link +=  ` Voto: ${vote}`;
+    // }
+    let vote = plexItem.rating || (scraped.ImdbData && scraped.ImdbData.rating) || scraped.Vote;
     if ( vote ) {
-      imdb_link +=  ` Voto: ${vote}`;
+      imdb_link +=  ` Voto: ${vote.toFixed(1)}`;
     }
   }
 
