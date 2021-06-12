@@ -130,6 +130,14 @@ module.exports = function({scraped, plexItem}, {Name}) {
       imdb_link +=  ` Voto: ${vote.toFixed(1)}`;
     }
   }
+  let vote = plexItem.rating;
+  if ( vote ) {
+    try {
+      imdb_link =  `Voto: ${vote.toFixed(1)}`;
+    } catch(e) {
+      // silently fail
+    }
+  }
 
 
   let resolution = '';
@@ -184,6 +192,7 @@ module.exports = function({scraped, plexItem}, {Name}) {
     return Promise.resolve( {
       poster,
       html: str.filter(row => row != 'NO').join('\n'),
+
     });
   });
 }
