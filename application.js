@@ -36,7 +36,7 @@ if ( ! FS.existsSync(datafolder) ) {
 
 
 if ( Config.ENABLE_WEBHOOK ) {
-  require('./webhook');
+  require('./webhook/webhook');
 }
 
 

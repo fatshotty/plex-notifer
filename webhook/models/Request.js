@@ -1,7 +1,6 @@
 const DiskDB = require('diskdb')
-const {Config} = require('../utils');
+const {Config} = require('../../utils');
 const DB = DiskDB.connect(Config.DATAFOLDER, ['requests']);
-
 
 
 // {
@@ -30,9 +29,24 @@ const DB = DiskDB.connect(Config.DATAFOLDER, ['requests']);
 //   }
 
 
+const NotyType = {
+  MEDIA_PENDING: 'REQUESTED',
+  MEDIA_DECLINED: 'REFUSED',
+  MEDIA_APPROVED: 'APPROVED',
+  MEDIA_AVAILABLE: 'AVAILABLE'
+};
+
 
 class Request {
 
+  static get TYPES() {
+    return NotyType;
+  }
+
+
+  get ID() {
+    return this.data._id;
+  }
 
   get Type() {
     return this.data.Type
@@ -64,14 +78,6 @@ class Request {
 
   set  Poster(v) {
     this.data.Poster = v;
-  }
-
-  get Username() {
-    return this.data.Username
-  }
-
-  set  Username(v) {
-    this.data.Username = v;
   }
 
   get MediaType() {
@@ -116,12 +122,13 @@ class Request {
 
 
 
-  constructor(data) {
+  constructor(reqdata) {
+    this.data = {};
+    this.bindData( reqdata || {media: {}, request: {}} );
 
-    this.data = data || {};
+    this.data._id = reqdata._id;
 
   }
-
 
 
   toJSON() {
@@ -130,8 +137,7 @@ class Request {
       MediaTitle: this.MediaTitle,
       Plot: this.Plot,
       Poster: this.Poster,
-      Username: this.Username,
-      Media_type: this.Media_type,
+      MediaType: this.MediaType,
       TmdbId: this.TmdbId,
       ImdbId: this.ImdbId,
       TvdbId: this.TvdbId,
@@ -140,29 +146,55 @@ class Request {
   }
 
 
-  static find(fields) {
+  save() {
+    let req = Request.save( this );
+    if (req) {
+      this.data._id = req.ID;
+    }
+    return this;
+  }
 
+
+  static find(fields) {
+    let d = DB.requests.findOne(fields)
+    if ( d ) {
+      return new Request(d);
+    }
+    return null;
   }
 
 
   static save(request) {
+    let update = false;
+    if ( request instanceof Request ) {
+      update = request.ID;
+      request = request.toJSON();
+    }
 
+    if ( !!update ) {
+      DB.requests.update( {_id: update}, request, {multi: false, upsert: false} );
+    } else {
+      let nd = DB.requests.save( request );
+      return new Request(nd);
+    }
   }
 
 
   bindData(notyData) {
 
-    this.Type = notyData.notification_type;
-    this.MediaTitle = notyData.mediatitle
-    this.Plot = notyData.plot
-    this.Poster = notyData.poster
-    this.Username = notyData.username
-    this.Media_type = notyData.media.media_type
-    this.TmdbId = notyData.media.tmdbId
-    this.ImdbId = notyData.media.imdbId
-    this.TvdbId = notyData.media.tvdbId
+    let notytype = notyData.Type || notyData.notification_type;
+    let t = NotyType[ notytype ];
 
-    this.RequestedByUsername = notyData.request.requestedBy_username
+    this.Type = notyData.Type || t;
+    this.MediaTitle = notyData.MediaTitle !== undefined ? notyData.MediaTitle : notyData.mediatitle
+    this.Plot = notyData.Plot !== undefined ? notyData.Plot : notyData.plot
+    this.Poster = notyData.Poster !== undefined ? notyData.Poster : notyData.poster
+    this.MediaType = notyData.MediaType !== undefined ? notyData.MediaType : notyData.media.media_type
+    this.TmdbId = notyData.TmdbId !== undefined ? notyData.TmdbId : notyData.media.tmdbId
+    this.ImdbId = notyData.ImdbId !== undefined ? notyData.ImdbId : notyData.media.imdbId
+    this.TvdbId = notyData.TvdbId !== undefined ? notyData.TvdbId : notyData.media.tvdbId
+
+    this.RequestedByUsername = notyData.RequestedByUsername || notyData.request.requestedBy_username
 
     return this;
 
@@ -176,3 +208,6 @@ class Request {
 
 
 }
+
+
+module.exports = Request;

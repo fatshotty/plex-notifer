@@ -63,6 +63,41 @@ function _send(posterUrl, html) {
 }
 
 
+async function sendNotificationToMonitor(posterUrl, html, title) {
+  title = title || html.split('\n').shift();
+  let isUrl = typeof posterUrl == 'string';
+  console.log(`[TelgramBot] notifing to telegram: ${title} ${isUrl ? 'with poster url' : 'with poster object'}`);
+  let method = 'sendPhoto';
+  let opts = {
+    parse_mode: "html",
+    disable_web_page_preview: false,
+    disable_notification: false,
+    caption: html
+  };
+  if ( !posterUrl ) {
+    method = 'sendMessage';
+    delete opts.caption;
+    posterUrl = html;
+  }
+  try {
+
+    await SlimbotLog[ method ](Config.TELEGRAM_LOG_CHAT_ID, posterUrl, opts )
+    console.log(`[TelgramBot] Successfull sent to telegram ${title}, waiting for queue...`);
+    // setTimeout( resolve, 5000);
+
+  } catch(e) {
+
+    console.log(`[ERROR telegram] ${title} ${!isUrl ? '(buff)' : ''} - ${e.message}`);
+    SlimbotLog.sendMessage(Config.TELEGRAM_LOG_CHAT_ID, `[Noty-Error] ${title} ${!isUrl ? '(buff)' : ''} - ${e.message}`, {
+      parse_mode: "html",
+      disable_web_page_preview: false,
+      disable_notification: false
+    });
+  }
+
+}
+
+
 function sendError(title, err) {
   SlimbotLog.sendMessage(Config.TELEGRAM_LOG_CHAT_ID, `[Noty-Error] ${title} - ${err.message}`, {
     parse_mode: "html",
@@ -129,6 +164,7 @@ module.exports = {
   Enabled: !!(Config.TELEGRAM_BOT_ID && Config.TELEGRAM_CHAT_ID),
   BotAdminEnabled,
   publish,
+  sendNotificationToMonitor,
   sendError,
   publishHtml,
   callbackMessage

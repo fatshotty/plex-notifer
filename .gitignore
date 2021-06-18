@@ -3,3 +3,4 @@
 .vscode/
 node_modules/
 plex-notifier.json
+data/
