@@ -9,13 +9,17 @@
   "author": "fatshotty",
   "license": "ISC",
   "dependencies": {
+    "body-parser": "^1.19.0",
+    "chokidar": "3.4.3",
+    "cors": "^2.8.5",
     "cron": "^1.8.2",
+    "diskdb": "^0.1.17",
     "dotenv": "^8.2.0",
+    "express": "^4.17.1",
     "imdb-api": "^4.0.3",
     "node-tvdb": "^4.1.0",
     "plex-api": "^5.3.1",
     "slimbot": "^4.7.0",
-    "tmdb": "^2.5.1",
-    "chokidar": "3.4.3"
+    "tmdb": "^2.5.1"
   }
 }

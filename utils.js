@@ -11,6 +11,10 @@ const Config = {
 
   CRON: process.env.CRON,
 
+  DATAFOLDER: process.env.DATA_FOLDER || Path.join(__dirname, 'data'),
+  ENABLE_WEBHOOK: process.env.ENABLE_WEBHOOK == 'true',
+  BIND_WEBHOOK: process.env.BIND_WEBHOOK,
+
   REMOUNT_COMMAND: process.env.REMOUT_COMMAND,
 
   TEMP_DIR: Path.normalize(process.env.TEMP_DIR || __dirname),

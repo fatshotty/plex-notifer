@@ -4,6 +4,8 @@ console.log(`****** STARTING UP ${new Date().toISOString()} ******`);
 const {Config, saveConfig} = require('./utils');
 const {PlexQuery} = require('./plex');
 const Job = require('./job');
+const Path = require('path');
+const FS = require('fs');
 
 
 const HealtCheckJob = require('./health-check');
@@ -23,6 +25,19 @@ console.log = function() {
   _console_log.apply(console, args);
 };
 
+
+
+let datafolder = Config.DATAFOLDER
+if ( ! FS.existsSync(datafolder) ) {
+  FS.mkdirSync( datafolder );
+}
+
+
+
+
+if ( Config.ENABLE_WEBHOOK ) {
+  require('./webhook');
+}
 
 
 let libraries = Config.ConfigFile.Libraries || {};
