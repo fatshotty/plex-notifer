@@ -28,7 +28,7 @@ module.exports.users = function(request) {
   let type = request.MediaType == 'movie' ? 'Film' : 'Serie TV';
 
 
-  let html = `Ci dispiace molto, ma purtroppo la tua richiesta in merito a ${request.MediaTile} non può essere accettata
+  let html = `Ci dispiace molto, ma purtroppo la tua richiesta in merito a ${request.MediaTitle} non può essere accettata
 
 🌹
 `

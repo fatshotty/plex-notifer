@@ -49,7 +49,7 @@ App.use( BodyParser.json() );
 
 App.post('/webhook/requests', (req, res, next) => {
 
-  let formdata = request.body;
+  let formdata = req.body;
 
   let req_id = formdata.request ? formdata.request.request_id : 'no_req_id';
 
