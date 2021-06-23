@@ -188,6 +188,16 @@ module.exports = function({scraped, plexItem}, {Name}) {
     Config.PC_NAME ? `- ${Config.PC_NAME} -` : 'NO'
   ]
 
+
+  const GetUserRequest = require('./template_utils');
+  let request = GetUserRequest(scraped.Title || plexItem.title, scraped.Year || plexItem.year);
+
+  if ( request ) {
+    str.unshift(
+      `🏅 <b>Richiesta soddisfatta!</b> 🏅`
+    )
+  }
+
   return p_poster.then( (poster) => {
     return Promise.resolve( {
       poster,

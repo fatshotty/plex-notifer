@@ -149,6 +149,7 @@ module.exports = function({scraped, plexItem}, {Name}) {
 
   let sizes = [... (new Set( plexItem.Media.map(m => m.Part && m.Part[0] && m.Part[0].size).filter(s => !!s).map(formatBytes)) ) ].join(' / ');
 
+
   // 🏅
 
   let str = [
@@ -168,7 +169,17 @@ module.exports = function({scraped, plexItem}, {Name}) {
     '',
     imdb_link ? imdb_link : 'NO',
     Config.PC_NAME ? `- ${Config.PC_NAME} -` : 'NO'
-  ]
+  ];
+
+
+  const GetUserRequest = require('./template_utils');
+  let request = GetUserRequest(scraped.Id, scraped.Title || plexItem.title, scraped.Year || plexItem.year);
+
+  if ( request ) {
+    str.unshift(
+      `🏅 <b>Richiesta soddisfatta!</b> 🏅`
+    )
+  }
 
   return p_poster.then( (poster) => {
     return Promise.resolve( {

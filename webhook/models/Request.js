@@ -120,6 +120,18 @@ class Request {
     this.data.RequestedByUsername = v;
   }
 
+  get RequestID() {
+    return this.data.RequestID;
+  }
+
+  set RequestID(v) {
+    this.data.RequestID = v;
+  }
+
+  get CleanedMediaTitle() {
+    return Request.cleanMediaTitle(this.MediaTitle);
+  }
+
 
 
   constructor(reqdata) {
@@ -135,13 +147,15 @@ class Request {
     return {
       Type: this.Type,
       MediaTitle: this.MediaTitle,
+      CleanedMediaTitle: this.CleanedMediaTitle,
       Plot: this.Plot,
       Poster: this.Poster,
       MediaType: this.MediaType,
       TmdbId: this.TmdbId,
       ImdbId: this.ImdbId,
       TvdbId: this.TvdbId,
-      RequestedByUsername: this.RequestedByUsername
+      RequestedByUsername: this.RequestedByUsername,
+      RequestID: this.RequestID
     }
   }
 
@@ -186,24 +200,32 @@ class Request {
     let t = NotyType[ notytype ];
 
     this.Type = notyData.Type || t;
-    this.MediaTitle = notyData.MediaTitle !== undefined ? notyData.MediaTitle : notyData.mediatitle
-    this.Plot = notyData.Plot !== undefined ? notyData.Plot : notyData.plot
-    this.Poster = notyData.Poster !== undefined ? notyData.Poster : notyData.poster
-    this.MediaType = notyData.MediaType !== undefined ? notyData.MediaType : notyData.media.media_type
-    this.TmdbId = notyData.TmdbId !== undefined ? notyData.TmdbId : notyData.media.tmdbId
-    this.ImdbId = notyData.ImdbId !== undefined ? notyData.ImdbId : notyData.media.imdbId
-    this.TvdbId = notyData.TvdbId !== undefined ? notyData.TvdbId : notyData.media.tvdbId
+    this.MediaTitle = notyData.MediaTitle !== undefined ? notyData.MediaTitle : notyData.mediatitle;
+    this.Plot = notyData.Plot !== undefined ? notyData.Plot : notyData.plot;
+    this.Poster = notyData.Poster !== undefined ? notyData.Poster : notyData.poster;
+    this.MediaType = notyData.MediaType !== undefined ? notyData.MediaType : notyData.media.media_type;
+    this.TmdbId = notyData.TmdbId !== undefined ? notyData.TmdbId : notyData.media.tmdbId;
+    this.ImdbId = notyData.ImdbId !== undefined ? notyData.ImdbId : notyData.media.imdbId;
+    this.TvdbId = notyData.TvdbId !== undefined ? notyData.TvdbId : notyData.media.tvdbId;
 
-    this.RequestedByUsername = notyData.RequestedByUsername || notyData.request.requestedBy_username
+    this.RequestedByUsername = notyData.RequestedByUsername || notyData.request.requestedBy_username;
+    this.RequestID = notyData.RequestID || notyData.request.request_id;
 
     return this;
 
-    }
+  }
 
   static bindData(notyData) {
     let req = new Request();
     req.bindData(notyData);
     return req;
+  }
+
+
+  static cleanMediaTitle( mediatitle ) {
+
+    return mediatitle.replace( /[^a-z0-9\(\)\s]/gi, '' );
+
   }
 
 

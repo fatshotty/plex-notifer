@@ -51,8 +51,10 @@ App.post('/webhook/requests', (req, res, next) => {
 
   let formdata = request.body;
 
-  console.log('WH: ', formdata);
-  process.nextTick( preprocessRequest.bind(null, formdata) );
+  let req_id = formdata.request ? formdata.request.request_id : 'no_req_id';
+
+  console.log('WH: new request ->', req_id, JSON.stringify(formdata));
+  process.nextTick( preprocessRequest.bind(null, req_id, formdata) );
 
   res.status(200).send('OK');
 })
@@ -65,30 +67,49 @@ App.listen(PORT, IP, () => {
 
 
 
-async function preprocessRequest(jsondata) {
+async function preprocessRequest(reqID, jsondata) {
   let request = new Request(jsondata);
 
+  console.log('Starting process request: ', reqID, request.Type, request.MediaTitle);
 
-  let loadedrequest = Request.find({
-    MediaTitle: request.MediaTitle
+  let loadedrequest = null;
+
+  loadedrequest = Request.find({
+    CleanedMediaTitle: request.CleanedMediaTitle
   });
 
+  if ( !loadedrequest ) {
+    console.log(`[${reqID}]`, 'no request found by', request.CleanedMediaTitle);
+    loadedrequest = Request.find({
+      MediaTitle: request.MediaTitle
+    });
+  }
+
   if ( loadedrequest ) {
+
+    reqID = `${reqID}-${loadedrequest.RequestID}`;
+
+    console.log(`[${reqID}]`, 'we found an older request in', loadedrequest.Type, 'by', loadedrequest.RequestedByUsername);
 
     loadedrequest.Type = request.Type;
     loadedrequest.RequestedByUsername = request.RequestedByUsername;
 
     request = loadedrequest;
 
+  } else {
+    console.log(`[${reqID}]`, 'no request found by', request.MediaTitle);
   }
 
   request.save();
 
-  processRequest( request );
+  processRequest( reqID, request );
 }
 
 
-async function processRequest(request) {
+async function processRequest(reqID, request) {
+
+
+  console.log(`[${reqID}]`, 'Getting template', request.Type);
 
   let tmpl = Templates[ request.Type ];
 
@@ -97,45 +118,43 @@ async function processRequest(request) {
 
 
     if ( tmpl.admin ) {
-      // if ( [ Request.TYPES.MEDIA_PENDING, Request.TYPES.MEDIA_DECLINED ].indexOf( request.Type ) > -1 ) {
 
-        let tmpldata = await tmpl.admin( request.toJSON() );
+      console.log(`[${reqID}]`, 'template for admin notification found');
 
-        if ( TelegramBot.BotAdminEnabled ) {
-          TelegramBot.sendNotificationToMonitor( tmpldata.poster, tmpldata.html, `${request.Type} - ${request.MediaTitle}` )
-        } else {
-          console.log( tmpldata.html );
-        }
+      let tmpldata = await tmpl.admin( request.toJSON() );
 
+      if ( TelegramBot.BotAdminEnabled ) {
+        TelegramBot.sendNotificationToMonitor( tmpldata.poster, tmpldata.html, `${request.Type} - ${request.MediaTitle}` )
+      } else {
+        console.log( tmpldata.html );
       }
-    // }
+
+    }
 
     if ( tmpl.users ) {
 
-      // if ( [ Request.TYPES.MEDIA_DECLINED, Request.TYPES.MEDIA_APPROVED, Request.TYPES.MEDIA_AVAILABLE ].indexOf( request.Type ) > -1 ) {
+      console.log(`[${reqID}]`, 'template for users notification found');
 
-        let tmpldata = await tmpl.users( request.toJSON() );
+      let tmpldata = await tmpl.users( request.toJSON() );
 
-        if ( TelegramBot.Enabled ) {
+      if ( TelegramBot.Enabled ) {
 
-          await TelegramBot.publish( tmpldata.poster, tmpldata.html )
+        await TelegramBot.publish( tmpldata.poster, tmpldata.html )
 
-        } else {
+      } else {
 
-          console.log( tmpldata.html );
+        console.log( tmpldata.html );
 
-        }
+      }
 
-      // }
     }
-
-
 
 
 
   } else {
 
-    // TODO: no template found
+    console.log(`[${reqID}]`, 'NO template found');
+
   }
 
 
