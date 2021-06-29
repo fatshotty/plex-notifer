@@ -14,13 +14,13 @@ module.exports = function(tmdbID, title, year) {
 
   }
 
-  if ( !loadedrequest ) {
+  let titleStr = `${title} (${year})`;
 
-    let titleStr = `${title} (${year})`;
+  if ( !loadedrequest ) {
 
     let cleanedTitle = Request.cleanMediaTitle( titleStr );
 
-    console.log('Try to get the request from DB via cleaned title-year', cleanedTitle);
+    console.log('Try to get the request from DB via cleaned title-year:', cleanedTitle);
 
     loadedrequest = Request.find({
       CleanedMediaTitle: cleanedTitle
@@ -30,7 +30,7 @@ module.exports = function(tmdbID, title, year) {
 
   if ( !loadedrequest ) {
 
-    console.log('Try to get the request from DB via title-year', titleStr);
+    console.log('Try to get the request from DB via title-year:', titleStr);
 
     loadedrequest = Request.find({
       MediaTitle: titleStr

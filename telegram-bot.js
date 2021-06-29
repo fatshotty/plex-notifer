@@ -1,9 +1,17 @@
-const {Config} = require('./utils');
+const {Config, TelgramBot} = require('./utils');
 const Telegram = require('slimbot');
 
-const Slimbot = new Telegram(Config.TELEGRAM_BOT_ID);
-const SlimbotLog = new Telegram(Config.TELEGRAM_LOG_BOT_ID);
 
+if ( !TelgramBot.Slimbot && Config.TELEGRAM_BOT_ID ) {
+  TelgramBot.Slimbot = new Telegram(Config.TELEGRAM_BOT_ID);
+}
+
+if ( !TelgramBot.SlimbotLog && Config.TELEGRAM_LOG_BOT_ID) {
+  TelgramBot.SlimbotLog = new Telegram(Config.TELEGRAM_LOG_BOT_ID);
+}
+
+let Slimbot = TelgramBot.Slimbot; 
+let SlimbotLog = TelgramBot.SlimbotLog; 
 
 let queue = [];
 let FREE = true;

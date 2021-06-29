@@ -74,5 +74,9 @@ function saveConfig() {
 
 module.exports = {
   Config,
-  saveConfig
+  saveConfig,
+  TelgramBot: {
+    Slimbot: null,
+    SlimbotLog: null
+  }
 };

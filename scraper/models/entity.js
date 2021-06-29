@@ -12,6 +12,10 @@ class Entity {
     return this.data.name;
   }
 
+  get Year() {
+    return this.data.releaseDate ? parseInt(this.data.releaseDate.split('-').shift()) : 0;
+  }
+
   get ImdbData() {
     return this.data.imdb_data;
   }
