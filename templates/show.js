@@ -130,7 +130,7 @@ module.exports = function({scraped, plexItem}, {Name}) {
       imdb_link +=  ` Voto: ${vote.toFixed(1)}`;
     }
   }
-  let vote = plexItem.rating;
+  let vote = (scraped ? scraped.Vote : false) || plexItem.rating;
   if ( vote ) {
     try {
       imdb_link =  `Voto: ${vote.toFixed(1)}`;
@@ -190,7 +190,7 @@ module.exports = function({scraped, plexItem}, {Name}) {
 
 
   const GetUserRequest = require('./template_utils');
-  let request = GetUserRequest(scraped.Title || plexItem.title, scraped.Year || plexItem.year);
+  let request = GetUserRequest(scraped.Id, scraped.Title || plexItem.title, scraped.Year || plexItem.year);
 
   if ( request ) {
     str.unshift(

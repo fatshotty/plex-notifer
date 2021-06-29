@@ -13,7 +13,7 @@ class Entity {
   }
 
   get Year() {
-    return this.data.releaseDate ? parseInt(this.data.releaseDate.split('-').shift()) : 0;
+    return (this.data.releaseDate || this.data.firstAirDate) ? parseInt(  (this.data.releaseDate || this.data.firstAirDate).split('-').shift() ) : 0;
   }
 
   get ImdbData() {
