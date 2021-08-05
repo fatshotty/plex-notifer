@@ -100,6 +100,8 @@ async function preprocessRequest(reqID, jsondata) {
     console.log(`[${reqID}]`, 'no request found by', request.MediaTitle);
   }
 
+
+  console.log('Saving request into DB', JSON.stringify(request));
   request.save();
 
   processRequest( reqID, request );
