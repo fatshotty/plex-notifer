@@ -138,10 +138,10 @@ class Request {
     this.data = {};
     this.bindData( reqdata || {media: {}, request: {}} );
 
-    console.log('Building overseer request');
-    console.log( JSON.stringify(reqdata) );
-    console.log('remapped to');
-    console.log( JSON.stringify(this) );
+    console.log('WH: Building overseer request');
+    console.log('WH: ', JSON.stringify(reqdata) );
+    console.log('WH: remapped to');
+    console.log('WH: ', JSON.stringify(this) );
 
     this.data._id = reqdata._id;
 

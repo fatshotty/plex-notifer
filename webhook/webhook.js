@@ -61,7 +61,7 @@ App.post('/webhook/requests', (req, res, next) => {
 
 
 App.listen(PORT, IP, () => {
-  console.log('WEBHOOK listening on port', PORT);
+  console.log('WH: WEBHOOK listening on port', PORT);
 })
 
 
@@ -70,16 +70,24 @@ App.listen(PORT, IP, () => {
 async function preprocessRequest(reqID, jsondata) {
   let request = new Request(jsondata);
 
-  console.log('Starting process request: ', reqID, request.Type, request.MediaTitle);
+  console.log('WH: Starting process request: ', reqID, request.Type, request.MediaTitle);
 
   let loadedrequest = null;
 
+
   loadedrequest = Request.find({
-    CleanedMediaTitle: request.CleanedMediaTitle
+    TmdbId: request.TmdbId
   });
 
   if ( !loadedrequest ) {
-    console.log(`[${reqID}]`, 'no request found by', request.CleanedMediaTitle);
+    console.log(`WH: [${reqID}]`, 'no request found by TMDB', request.TmdbId);
+    loadedrequest = Request.find({
+      CleanedMediaTitle: request.CleanedMediaTitle
+    });
+  }
+
+  if ( !loadedrequest ) {
+    console.log(`WH: [${reqID}]`, 'no request found by cleaned title', request.CleanedMediaTitle);
     loadedrequest = Request.find({
       MediaTitle: request.MediaTitle
     });
@@ -89,7 +97,7 @@ async function preprocessRequest(reqID, jsondata) {
 
     reqID = `${reqID}-${loadedrequest.RequestID}`;
 
-    console.log(`[${reqID}]`, 'we found an older request in', loadedrequest.Type, 'by', loadedrequest.RequestedByUsername);
+    console.log(`WH: [${reqID}]`, 'we found an older request in', loadedrequest.Type, 'by', loadedrequest.RequestedByUsername);
 
     loadedrequest.Type = request.Type;
     loadedrequest.RequestedByUsername = request.RequestedByUsername;
@@ -97,11 +105,11 @@ async function preprocessRequest(reqID, jsondata) {
     request = loadedrequest;
 
   } else {
-    console.log(`[${reqID}]`, 'no request found by', request.MediaTitle);
+    console.log(`WH: [${reqID}]`, 'no request found by title', request.MediaTitle);
   }
 
 
-  console.log('Saving request into DB', JSON.stringify(request));
+  console.log('WH: Saving request into DB', JSON.stringify(request));
   request.save();
 
   processRequest( reqID, request );
@@ -111,7 +119,7 @@ async function preprocessRequest(reqID, jsondata) {
 async function processRequest(reqID, request) {
 
 
-  console.log(`[${reqID}]`, 'Getting template', request.Type);
+  console.log(`WH: [${reqID}]`, 'Getting template', request.Type);
 
   let tmpl = Templates[ request.Type ];
 
@@ -121,21 +129,21 @@ async function processRequest(reqID, request) {
 
     if ( tmpl.admin ) {
 
-      console.log(`[${reqID}]`, 'template for admin notification found');
+      console.log(`WH: [${reqID}]`, 'template for admin notification found');
 
       let tmpldata = await tmpl.admin( request.toJSON() );
 
       if ( TelegramBot.BotAdminEnabled ) {
         TelegramBot.sendNotificationToMonitor( tmpldata.poster, tmpldata.html, `${request.Type} - ${request.MediaTitle}` )
       } else {
-        console.log( tmpldata.html );
+        console.log('WH: ', tmpldata.html );
       }
 
     }
 
     if ( tmpl.users ) {
 
-      console.log(`[${reqID}]`, 'template for users notification found');
+      console.log(`WH: [${reqID}]`, 'template for users notification found');
 
       let tmpldata = await tmpl.users( request.toJSON() );
 
@@ -145,7 +153,7 @@ async function processRequest(reqID, request) {
 
       } else {
 
-        console.log( tmpldata.html );
+        console.log('WH: ', tmpldata.html );
 
       }
 
@@ -155,7 +163,7 @@ async function processRequest(reqID, request) {
 
   } else {
 
-    console.log(`[${reqID}]`, 'NO template found');
+    console.log(`WH: [${reqID}]`, 'NO template found');
 
   }
 

@@ -7,7 +7,7 @@ module.exports = function(tmdbID, title, year) {
   let loadedrequest;
 
   if ( tmdbID ) {
-    console.log('Try to get the request from DB via TMDB', tmdbID );
+    console.log('WH: Try to get the request from DB via TMDB', tmdbID );
     loadedrequest = Request.find({
       TmdbId: tmdbID
     });
@@ -20,7 +20,7 @@ module.exports = function(tmdbID, title, year) {
 
     let cleanedTitle = Request.cleanMediaTitle( titleStr );
 
-    console.log('Try to get the request from DB via cleaned title-year:', cleanedTitle);
+    console.log('WH: Try to get the request from DB via cleaned title-year:', cleanedTitle);
 
     loadedrequest = Request.find({
       CleanedMediaTitle: cleanedTitle
@@ -30,7 +30,7 @@ module.exports = function(tmdbID, title, year) {
 
   if ( !loadedrequest ) {
 
-    console.log('Try to get the request from DB via title-year:', titleStr);
+    console.log('WH: Try to get the request from DB via title-year:', titleStr);
 
     loadedrequest = Request.find({
       MediaTitle: titleStr
@@ -39,7 +39,7 @@ module.exports = function(tmdbID, title, year) {
   }
 
   if (loadedrequest) {
-    console.log('request found!', loadedrequest.RequestID );
+    console.log('WH: request found!', loadedrequest.RequestID );
   }
 
   return loadedrequest;
