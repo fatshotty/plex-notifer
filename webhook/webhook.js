@@ -74,20 +74,20 @@ async function preprocessRequest(reqID, jsondata) {
 
   let loadedrequest = null;
 
-
+  console.log('search into db via TMDB', request.TmdbId);
   loadedrequest = Request.find({
     TmdbId: request.TmdbId
   });
 
   if ( !loadedrequest ) {
-    console.log(`WH: [${reqID}]`, 'no request found by TMDB', request.TmdbId);
+    console.log(`WH: [${reqID}]`, 'searching via clean title', request.CleanedMediaTitle);
     loadedrequest = Request.find({
       CleanedMediaTitle: request.CleanedMediaTitle
     });
   }
 
   if ( !loadedrequest ) {
-    console.log(`WH: [${reqID}]`, 'no request found by cleaned title', request.CleanedMediaTitle);
+    console.log(`WH: [${reqID}]`, 'searching via title', request.MediaTitle);
     loadedrequest = Request.find({
       MediaTitle: request.MediaTitle
     });
@@ -105,7 +105,7 @@ async function preprocessRequest(reqID, jsondata) {
     request = loadedrequest;
 
   } else {
-    console.log(`WH: [${reqID}]`, 'no request found by title', request.MediaTitle);
+    console.log(`WH: [${reqID}]`, 'no request found');
   }
 
 

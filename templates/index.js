@@ -7,6 +7,7 @@ module.exports = {
   template_9: require('./show'),
   template_13: require('./show'),
   template_27: require('./show'),
+  template_35: require('./show'),
 
   template_25: require('./videos_collections'),
   template_16: require('./videos'),

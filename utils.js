@@ -1,4 +1,11 @@
-require('dotenv').config();
+
+if ( process.env.ENV_FILE_PATH ) {
+  require('dotenv').config({path: process.env.ENV_FILE_PATH});
+} else {
+  require('dotenv').config
+}
+
+
 const Path = require('path');
 const FS = require('fs');
 

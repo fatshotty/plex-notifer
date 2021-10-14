@@ -108,10 +108,10 @@ module.exports = function({scraped, plexItem}, {Name}) {
   }
 
   let summary = '';
-  if (plexItem.summary ) {
-    summary = plexItem.summary;
-  } else if ( scraped.Description ) {
+  if ( scraped.Description ) {
     summary = scraped.Description;
+  } else if (plexItem.summary ) {
+    summary = plexItem.summary;
   }
 
   if ( Config.PLOT_LIMIT && summary.length > Config.PLOT_LIMIT ) {
