@@ -152,15 +152,16 @@ module.exports = async function({scraped, plexItem}, {Name}) {
   }
 
 
-
-  let vote = (scraped ? scraped.Vote : false) || plexItem.rating;
-  if ( vote ) {
-    try {
-      imdb_link =  `Voto: ${vote.toFixed(1)}`;
-    } catch(e) {
-      // silently fail
+  if ( !imdb_link ) {
+    let vote = (scraped ? scraped.Vote : false) || plexItem.rating;
+    if ( vote ) {
+      try {
+        imdb_link =  `Voto: ${vote.toFixed(1)}`;
+      } catch(e) {
+        // silently fail
+      }
     }
-  }
+}
 
 
   let resolution = '';
