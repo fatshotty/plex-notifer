@@ -20,6 +20,13 @@ module.exports.admin = async function( request, mdblistData ) {
     html += `<a href="https://www.themoviedb.org/${request.MediaType}/${request.TmdbId}">TMDB</a> ↗️
 `
   }
+
+  if ( request.TvdbId ) {
+    html += `<a href="https://www.thetvdb.com/dereferrer/series/${request.TvdbId}">TVDB</a> ↗️
+`
+  }
+
+
   if ( mdblistData ) {
     const str = [];
     str.push(`<a href="https://www.imdb.com/title/${mdblistData.imdbid}">IMDB</a> ↗️
@@ -31,22 +38,18 @@ module.exports.admin = async function( request, mdblistData ) {
 `);
 
     } catch(e) {
-      console.log(`Cannot get trakt info by ${request.ImdbId}`, e);
+      console.log(`WH: [${request.RequestID}]`, `Cannot get trakt info by ${mdblistData.imdbid}`, e);
     }
 
 
     // show streams
     const streams = [...(new Set( mdblistData.streams.map(s => s.name) ) ), ...(new Set(mdblistData.watch_providers.map(s => s.name))) ];
     str.push(`
-📡 ${streams.join(' - ')}`);
+📡 ${streams.join(' - ')}
+`);
 
     html += str.join('');
   }
-  if ( request.TvdbId ) {
-    html += `<a href="https://www.thetvdb.com/dereferrer/series/${request.TvdbId}">TVDB</a> ↗️`
-  }
-
-
 
   return {poster: null, html}
 

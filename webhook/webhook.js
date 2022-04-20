@@ -185,7 +185,7 @@ async function getMdblistData(request) {
   
   const isMovie = request.MediaType == 'movie' ? 'movie' : 'show';
   try {
-    let mdbdata = await GOT(`https://mdblist.com/api/?apikey=${Config.MDBLIST_API_ID}&tm=${request.TmdbId}&m=${isMovie ? 'movie' : 'show'}`).json();
+    let mdbdata = await GOT(`https://mdblist.com/api/?apikey=${Config.MDBLIST_API_ID}&tm=${request.TmdbId}&m=${isMovie}`).json();
     return mdbdata;
   } catch(e) {
     console.log(`WH: [${request.RequestID}]`, 'cannot get MDBList data', e);
