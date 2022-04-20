@@ -1,7 +1,7 @@
-const {Trakt} = require('../utils');
+const {Trakt} = require('../../utils');
 
 
-module.exports.admin = async function( request ) {
+module.exports.admin = async function( request, mdblistData ) {
 
   const isMovie = request.MediaType == 'movie';
   let icon = isMovie ? '🎬' : '📺';
@@ -20,19 +20,27 @@ module.exports.admin = async function( request ) {
     html += `<a href="https://www.themoviedb.org/${request.MediaType}/${request.TmdbId}">TMDB</a> ↗️
 `
   }
-  if ( request.ImdbId ) {
+  if ( mdblistData ) {
     const str = [];
-    str.push(`<a href="https://www.imdb.com/title/${request.ImdbId}">IMDB</a> ↗️`);
+    str.push(`<a href="https://www.imdb.com/title/${mdblistData.imdbid}">IMDB</a> ↗️
+`);
 
     try {
-      let traktData = await Trakt[ isMovie ? 'getMovieByID' : 'getTvShowByID' ]( request.ImdbId );
-      str.push(`<a href="https://trakt.tv/${isMovie ? 'movies' : 'shows'}/${traktData.ids.slug}">TRAKT</a> ↗️ `);
+      let traktData = await Trakt[ isMovie ? 'getMovieByID' : 'getTvShowByID' ]( mdblistData.imdbid );
+      str.push(`<a href="https://trakt.tv/${isMovie ? 'movies' : 'shows'}/${traktData.ids.slug}">TRAKT</a> ↗️
+`);
 
     } catch(e) {
       console.log(`Cannot get trakt info by ${request.ImdbId}`, e);
     }
 
-    html += str.join('\n');
+
+    // show streams
+    const streams = [...(new Set( mdblistData.streams.map(s => s.name) ) ), ...(new Set(mdblistData.watch_providers.map(s => s.name))) ];
+    str.push(`
+📡 ${streams.join(' - ')}`);
+
+    html += str.join('');
   }
   if ( request.TvdbId ) {
     html += `<a href="https://www.thetvdb.com/dereferrer/series/${request.TvdbId}">TVDB</a> ↗️`

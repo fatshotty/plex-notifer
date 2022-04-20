@@ -5,6 +5,7 @@ const {Config} = require('../utils');
 const Request = require('./models/Request')
 const TelegramBot = require('../telegram-bot');
 const Templates = require('./templates');
+const GOT = require('got');
 
 console.log('Enabling WEBHOOK');
 
@@ -54,10 +55,14 @@ App.post('/webhook/requests', (req, res, next) => {
   let req_id = formdata.request ? formdata.request.request_id : 'no_req_id';
 
   console.log('WH: new request ->', req_id, JSON.stringify(formdata));
-  process.nextTick( preprocessRequest.bind(null, req_id, formdata) );
+  if ( Object.keys(formdata).length <= 0 ) {
+    console.log('WH: -- no body found --');
+  } else {
+    process.nextTick( preprocessRequest.bind(null, req_id, formdata) );
+  }
 
   res.status(200).send('OK');
-})
+});
 
 
 App.listen(PORT, IP, () => {
@@ -123,6 +128,8 @@ async function processRequest(reqID, request) {
 
   let tmpl = Templates[ request.Type ];
 
+  const MDBListData = await getMdblistData(request);
+
 
   if ( tmpl ) {
 
@@ -131,7 +138,7 @@ async function processRequest(reqID, request) {
 
       console.log(`WH: [${reqID}]`, 'template for admin notification found');
 
-      let tmpldata = await tmpl.admin( request.toJSON() );
+      let tmpldata = await tmpl.admin( request.toJSON(), MDBListData );
 
       if ( TelegramBot.BotAdminEnabled ) {
         TelegramBot.sendNotificationToMonitor( tmpldata.poster, tmpldata.html, `${request.Type} - ${request.MediaTitle}` )
@@ -170,6 +177,22 @@ async function processRequest(reqID, request) {
 
 }
 
+
+
+async function getMdblistData(request) {
+
+  if ( !request.TmdbId) return null;
+  
+  const isMovie = request.MediaType == 'movie' ? 'movie' : 'show';
+  try {
+    let mdbdata = await GOT(`https://mdblist.com/api/?apikey=${Config.MDBLIST_API_ID}&tm=${request.TmdbId}&m=${isMovie ? 'movie' : 'show'}`).json();
+    return mdbdata;
+  } catch(e) {
+    console.log(`WH: [${request.RequestID}]`, 'cannot get MDBList data', e);
+  }
+
+  return null;
+}
 
 
 module.exports = {preprocessRequest, processRequest};

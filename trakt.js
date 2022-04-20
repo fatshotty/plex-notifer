@@ -1,5 +1,6 @@
 const {EventEmitter} = require('events');
 const TraktTv = require('trakt.tv');
+const GOT = require('got');
 
 
 const DayJs = require('dayjs');

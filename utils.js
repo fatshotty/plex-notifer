@@ -38,6 +38,8 @@ const Config = {
     client_secret: process.env.TRAKT_CLIENT_SECRET
   },
 
+  MDBLIST_API_ID: process.env.MDBLIST_API_ID,
+
   TELEGRAM_BOT_ID: process.env.TELEGRAM_BOT_ID,
   TELEGRAM_CHAT_ID: process.env.TELEGRAM_CHAT_ID,
 
