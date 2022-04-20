@@ -1,11 +1,11 @@
+const {Trakt} = require('../utils');
 
 
+module.exports.admin = async function( request ) {
 
-module.exports.admin = function( request ) {
-
-
-  let icon = request.MediaType == 'movie' ? '🎬' : '📺';
-  let type = request.MediaType == 'movie' ? 'Film' : 'Serie TV';
+  const isMovie = request.MediaType == 'movie';
+  let icon = isMovie ? '🎬' : '📺';
+  let type = isMovie ? 'Film' : 'Serie TV';
 
   let html = `🙋‍♂️ <b>Nuova richiesta</b>
 
@@ -21,8 +21,18 @@ module.exports.admin = function( request ) {
 `
   }
   if ( request.ImdbId ) {
-    html += `<a href="https://www.imdb.com/title/${request.ImdbId}">IMDB</a> ↗️
-`
+    const str = [];
+    str.push(`<a href="https://www.imdb.com/title/${request.ImdbId}">IMDB</a> ↗️`);
+
+    try {
+      let traktData = await Trakt[ isMovie ? 'getMovieByID' : 'getTvShowByID' ]( request.ImdbId );
+      str.push(`<a href="https://trakt.tv/${isMovie ? 'movies' : 'shows'}/${traktData.ids.slug}">TRAKT</a> ↗️ `);
+
+    } catch(e) {
+      console.log(`Cannot get trakt info by ${request.ImdbId}`, e);
+    }
+
+    html += str.join('\n');
   }
   if ( request.TvdbId ) {
     html += `<a href="https://www.thetvdb.com/dereferrer/series/${request.TvdbId}">TVDB</a> ↗️`
