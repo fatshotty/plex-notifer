@@ -43,7 +43,7 @@ module.exports.admin = async function( request, mdblistData ) {
 
 
     // show streams
-    const streams = [...(new Set( mdblistData.streams.map(s => s.name) ) ), ...(new Set(mdblistData.watch_providers.map(s => s.name))) ];
+    const streams = [...(new Set([...mdblistData.streams.map(s => s.name), ...mdblistData.watch_providers.map(s => s.name) ]))];
     str.push(`
 📡 ${streams.join(' - ')}
 `);
