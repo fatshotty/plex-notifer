@@ -1,6 +1,37 @@
 // const Scraper = require('./scraper/scraper');
 // const TVDB = Scraper.TVDB;
 
+const {Config} = require('./utils');
+const TraktService = require('./trakt')
+const FS = require('fs');
+
+
+const Trakt = new TraktService(Config.TRAKT);
+
+async function loginTrakt() {
+
+  if ( FS.existsSync(Config.TraktTokenFile) ) {
+    let tokensraw = FS.readFileSync( Config.TraktTokenFile, {encoding: 'utf-8'});
+    if ( tokensraw ) {
+      try {
+        let tokens = JSON.parse(tokensraw);
+        tokens = await Trakt.login(tokens);
+        FS.writeFileSync( Config.TraktTokenFile, JSON.stringify(tokens, null, 2), 'utf-8');
+      } catch(e) {
+        Log.warn('Trakt tokens are not valid');
+      }
+    }
+  }
+}
+
+
+async function start() {
+  await loginTrakt();
+
+  let movie = await Trakt.getMovieByID('tt1104001');
+  console.log(JSON.stringify(movie, null, 2));
+}
+start();
 
 // TVDB.getInfo('372996', 'tv').then( (klass) => {
 //     resolve( {scraped: klass, plexItem} );
@@ -10,34 +41,34 @@
 // });
 
 
-const {preprocessRequest} = require('./webhook/webhook');
+// const {preprocessRequest} = require('./webhook/webhook');
 
 
-// FILM REQUESTED
-preprocessRequest( 0, {
-  notification_type: 'MEDIA_PENDING',
-  mediatitle: 'High Life (2018)',
-  plot: "Paranormal investigators Ed and Lorraine Warren encounter what would become one of the most sensational cases from their files. The fight for the soul of a young boy takes them beyond anything they'd ever seen before, to mark the first time in U.S. history that a murder suspect would claim demonic possession as a defense.",
-  poster: 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/xbSuFiJbbBWCkyCCKIMfuDCA4yV.jpg',
-  email: '',
-  username: '',
-  avatar: '',
-  media: {
-    media_type: 'movie',
-    tmdbId: '423108',
-    imdbId: '',
-    tvdbId: '',
-    status: 'PENDING',
-    status4k: 'UNKNOWN'
-  },
-  extra: [],
-  request: {
-    request_id: '6',
-    requestedBy_email: 'fabio.tunno@gmail.com',
-    requestedBy_username: 'fatshotty',
-    requestedBy_avatar: 'https://plex.tv/users/29779461bb6e4b0e/avatar?c=1620060655'
-  }
-})
+// // FILM REQUESTED
+// preprocessRequest( 0, {
+//   notification_type: 'MEDIA_PENDING',
+//   mediatitle: 'High Life (2018)',
+//   plot: "Paranormal investigators Ed and Lorraine Warren encounter what would become one of the most sensational cases from their files. The fight for the soul of a young boy takes them beyond anything they'd ever seen before, to mark the first time in U.S. history that a murder suspect would claim demonic possession as a defense.",
+//   poster: 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/xbSuFiJbbBWCkyCCKIMfuDCA4yV.jpg',
+//   email: '',
+//   username: '',
+//   avatar: '',
+//   media: {
+//     media_type: 'movie',
+//     tmdbId: '423108',
+//     imdbId: '',
+//     tvdbId: '',
+//     status: 'PENDING',
+//     status4k: 'UNKNOWN'
+//   },
+//   extra: [],
+//   request: {
+//     request_id: '6',
+//     requestedBy_email: 'fabio.tunno@gmail.com',
+//     requestedBy_username: 'fatshotty',
+//     requestedBy_avatar: 'https://plex.tv/users/29779461bb6e4b0e/avatar?c=1620060655'
+//   }
+// })
 
 
 // FILM REFUSED

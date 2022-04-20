@@ -1,5 +1,5 @@
 const Path = require('path');
-const {Config} = require('../utils');
+const {Config, Trakt} = require('../utils');
 const {PlexQuery} = require('../plex');
 const FS = require('fs');
 
@@ -53,7 +53,7 @@ function extractMediaData(media) {
 }
 
 
-module.exports = function({scraped, plexItem}, {Name}) {
+module.exports = async function({scraped, plexItem}, {Name}) {
 
   let p_poster = new Promise( (resolve, reject) => {
     if ( scraped.Poster ) {
@@ -67,7 +67,7 @@ module.exports = function({scraped, plexItem}, {Name}) {
 
     } else if ( plexItem.thumb ) {
 
-      console.log(`[Template ${Name}] use thumnail ${plexItem.thumb}`);
+      console.log(`[Template ${Name}] use thumbnail ${plexItem.thumb}`);
       PlexQuery(plexItem.thumb).then( (buff) => {
         let fn = `./temp_thumb_${Date.now()}.png`;
         FS.writeFileSync(fn, buff, {encoding: 'binary'});
@@ -132,12 +132,30 @@ module.exports = function({scraped, plexItem}, {Name}) {
   }
 
   let imdb_link = '';
+  let trakt_link = '';
+  let trailer_link = '';
   if ( scraped.ImdbData ) {
     imdb_link = `<a href="https://www.imdb.com/title/${scraped.ImdbData.imdbid}">IMDB</a> ↗️ `;
-    let vote = plexItem.rating || (scraped.ImdbData && scraped.ImdbData.rating) || scraped.Vote;
+    let vote = plexItem.rating || scraped.ImdbData.rating || scraped.Vote;
     if ( vote ) {
       imdb_link +=  ` Voto: ${vote.toFixed(1)}`;
     }
+
+    try {
+      let traktMovie = await Trakt.getMovieByID( scraped.ImdbData.imdbid );
+
+      trakt_link = `<a href="https://trakt.tv/movies/${traktMovie.ids.slug}">TRAKT</a> ↗️ `;
+      if ( traktMovie.rating ) {
+        trakt_link +=  ` Voto: ${traktMovie.rating.toFixed(1)}`;
+      }
+
+      if ( traktMovie.trailer ) {
+        trailer_link = `<a href="${traktMovie.trailer}">trailer</a> ↗️ `;
+      }
+    } catch(e) {
+      console.log(`[Template ${Name}] cannot get trakt info by ${scraped.ImdbData.imdbid}`, e);
+    }
+
   }
 
   let mediaData = plexItem.Media.map( extractMediaData );
@@ -168,6 +186,8 @@ module.exports = function({scraped, plexItem}, {Name}) {
     summary ? summary : 'NO',
     '',
     imdb_link ? imdb_link : 'NO',
+    trakt_link ? trakt_link : 'NO',
+    trailer_link ? trailer_link : 'NO',
     Config.PC_NAME ? `- ${Config.PC_NAME} -` : 'NO'
   ];
 

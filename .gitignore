@@ -4,3 +4,5 @@
 node_modules/
 plex-notifier.json
 data/
+temp_thumb_*
+trakt-tokens.json

@@ -2,12 +2,14 @@
 if ( process.env.ENV_FILE_PATH ) {
   require('dotenv').config({path: process.env.ENV_FILE_PATH});
 } else {
-  require('dotenv').config
+  require('dotenv').config()
 }
 
 
 const Path = require('path');
 const FS = require('fs');
+
+const TraktService = require('./trakt');
 
 const Config = {
   PLEX_IP: process.env.PLEX_IP,
@@ -31,6 +33,11 @@ const Config = {
   TMDB_API_KEY: process.env.TMDB_API_KEY,
   TVDB_API_KEY: process.env.TVDB_API_KEY,
 
+  TRAKT: {
+    client_id: process.env.TRAKT_CLIENT_ID,
+    client_secret: process.env.TRAKT_CLIENT_SECRET
+  },
+
   TELEGRAM_BOT_ID: process.env.TELEGRAM_BOT_ID,
   TELEGRAM_CHAT_ID: process.env.TELEGRAM_CHAT_ID,
 
@@ -52,9 +59,10 @@ const Config = {
   HEALT_CHECK_CRON: process.env.HEALT_CHECK_CRON,
 
   ConfigFile: {}
+
 };
 
-
+Config.TraktTokenFile = process.env.TRAKT_TOKEN_FILE || Path.join(Config.TEMP_DIR, 'trakt-tokens.json');
 
 if ( ! FS.existsSync(Config.TEMP_DIR) ) {
   console.log(`${Config.TEMP_DIR} doesn't exists, creating`);
@@ -79,11 +87,15 @@ function saveConfig() {
 }
 
 
+const Trakt = new TraktService(Config.TRAKT);
+
+
 module.exports = {
   Config,
   saveConfig,
   TelgramBot: {
     Slimbot: null,
     SlimbotLog: null
-  }
+  },
+  Trakt
 };

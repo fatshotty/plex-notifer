@@ -1,5 +1,5 @@
 const Path = require('path');
-const {Config} = require('../utils');
+const {Config, Trakt} = require('../utils');
 const {PlexQuery} = require('../plex');
 const FS = require('fs');
 
@@ -40,7 +40,7 @@ function extractMediaData(media) {
 }
 
 
-module.exports = function({scraped, plexItem}, {Name}) {
+module.exports = async function({scraped, plexItem}, {Name}) {
 
   let p_poster = new Promise( (resolve, reject) => {
     if ( scraped.Poster ) {
@@ -119,6 +119,8 @@ module.exports = function({scraped, plexItem}, {Name}) {
   }
 
   let imdb_link = '';
+  let trakt_link = '';
+  let trailer_link = '';
   if ( scraped.ImdbData ) {
     imdb_link = `<a href="https://www.imdb.com/title/${scraped.ImdbData.imdbid}">IMDB</a> ↗️ `;
     // let vote = scraped.ImdbData ? scraped.ImdbData.rating : null;
@@ -129,7 +131,28 @@ module.exports = function({scraped, plexItem}, {Name}) {
     if ( vote ) {
       imdb_link +=  ` Voto: ${vote.toFixed(1)}`;
     }
+
+
+    try {
+      let traktShow = await Trakt.getTvShowByID( scraped.ImdbData.imdbid );
+
+      trakt_link = `<a href="https://trakt.tv/shows/${traktShow.ids.slug}">TRAKT</a> ↗️ `;
+      if ( traktShow.rating ) {
+        trakt_link +=  ` Voto: ${traktShow.rating.toFixed(1)}`;
+      }
+
+      if ( traktShow.trailer ) {
+        trailer_link = `<a href="${traktShow.trailer}">trailer</a> ↗️ `;
+      }
+    } catch(e) {
+      console.log(`[Template ${Name}] cannot get trakt info by ${scraped.ImdbData.imdbid}`, e);
+    }
+
+
   }
+
+
+
   let vote = (scraped ? scraped.Vote : false) || plexItem.rating;
   if ( vote ) {
     try {
@@ -185,6 +208,8 @@ module.exports = function({scraped, plexItem}, {Name}) {
     summary ? summary : 'NO',
     '',
     imdb_link ? imdb_link : 'NO',
+    trakt_link ? trakt_link : 'NO',
+    trailer_link ? trailer_link : 'NO',
     Config.PC_NAME ? `- ${Config.PC_NAME} -` : 'NO'
   ]
 

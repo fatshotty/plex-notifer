@@ -1,9 +1,6 @@
 const {EventEmitter} = require('events');
 const TraktTv = require('trakt.tv');
-const Logger = require('./logger');
-const Configuration = require('./configuration');
 
-const Log = new Logger('TraktService');
 
 const DayJs = require('dayjs');
 
@@ -98,28 +95,6 @@ class Trakt extends EventEmitter {
   }
 
 
-  async getEntireCollection(type) {
-    let collection = null;
-    
-    let mock = Path.join( Configuration.PrjFolder,  'mocks', `${type}_collected.json` );
-
-    if ( FS.existsSync(mock) && process.env.DEBUG == 'true' ) {
-      collection = FS.readFileSync(mock, 'utf-8');
-      collection = JSON.parse(collection);
-    } else {
-      collection = await this._service.users.collection( {username: this.User.slug, type, extended: 'full'} );
-      FS.writeFileSync( mock, JSON.stringify(collection), {encoding: 'utf-8'});
-    }
-
-    if ( type == 'movies') {
-      return this.remapMovie(collection);
-    } else {
-      return this.remapTvShows(collection);
-    }
-
-  }
-
-
   async getMyShowsNews(start, days) {
     let mytvshows = await this._service.calendars.my.shows({start_date: start, days: days});
 
@@ -173,6 +148,18 @@ class Trakt extends EventEmitter {
     return this.remapMovie(mymovies);
   }
 
+  async getMovieByID(id) {
+    let movie = await this._service.movies.summary({id: id, extended: 'full'});
+
+    return movie
+  }
+
+  async getTvShowByID(id) {
+    let movie = await this._service.shows.summary({id: id, extended: 'full'});
+
+    return movie
+  }
+
 
   remapMovie(mymovies) {
     let results = mymovies.map( (data) => {
@@ -200,7 +187,7 @@ class Trakt extends EventEmitter {
 
 
       if ( !m.ReleaseDate || !m.Title || !m.Year || !m.TraktID ) {
-        Log.error('cannot remap movie because missing required data:', `[${m.TraktID}] ${m.Title} (${m.Year}) - ${m.ReleaseDate}`);
+        console.error('cannot remap movie because missing required data:', `[${m.TraktID}] ${m.Title} (${m.Year}) - ${m.ReleaseDate}`);
         return undefined;
       }
 
