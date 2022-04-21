@@ -122,27 +122,27 @@ module.exports = async function({scraped, plexItem}, {Name}) {
   let trakt_link = '';
   let trailer_link = '';
   if ( scraped.ImdbData ) {
-    imdb_link = `<a href="https://www.imdb.com/title/${scraped.ImdbData.imdbid}">IMDB</a> ↗️ `;
+    imdb_link = `<a href="https://www.imdb.com/title/${scraped.ImdbData.imdbid}">IMDB</a>`;
     // let vote = scraped.ImdbData ? scraped.ImdbData.rating : null;
     // if ( vote ) {
     //   imdb_link +=  ` Voto: ${vote}`;
     // }
     let vote = plexItem.rating || (scraped.ImdbData && scraped.ImdbData.rating) || scraped.Vote;
     if ( vote ) {
-      imdb_link +=  ` Voto: ${vote.toFixed(1)}`;
+      imdb_link =  `${vote.toFixed(1)} - ${imdb_link}`;
     }
 
 
     try {
       let traktShow = await Trakt.getTvShowByID( scraped.ImdbData.imdbid );
 
-      trakt_link = `<a href="https://trakt.tv/shows/${traktShow.ids.slug}">TRAKT</a> ↗️ `;
+      trakt_link = `<a href="https://trakt.tv/shows/${traktShow.ids.slug}">TRAKT</a>`;
       if ( traktShow.rating ) {
-        trakt_link +=  ` Voto: ${traktShow.rating.toFixed(1)}`;
+        trakt_link =  `${traktShow.rating.toFixed(1)} - ${trakt_link}`;
       }
 
       if ( traktShow.trailer ) {
-        trailer_link = `<a href="${traktShow.trailer}">trailer</a> ↗️ `;
+        trailer_link = `<a href="${traktShow.trailer}">Trailer</a>`;
       }
     } catch(e) {
       console.log(`[Template ${Name}] cannot get trakt info by ${scraped.ImdbData.imdbid}`, e);
@@ -156,7 +156,7 @@ module.exports = async function({scraped, plexItem}, {Name}) {
     let vote = (scraped ? scraped.Vote : false) || plexItem.rating;
     if ( vote ) {
       try {
-        imdb_link =  `Voto: ${vote.toFixed(1)}`;
+        imdb_link =  `${vote.toFixed(1)} - IMDB`;
       } catch(e) {
         // silently fail
       }
@@ -189,6 +189,11 @@ module.exports = async function({scraped, plexItem}, {Name}) {
     studios = scraped.data.networks.map(n => n.name).filter(n => !!n).join(', ');
   }
 
+
+  if ( trailer_link ) {
+    summary = `${summary} - ${trailer_link}`
+  }
+
   // 🏅
 
   let str = [
@@ -208,9 +213,9 @@ module.exports = async function({scraped, plexItem}, {Name}) {
     '',
     summary ? summary : 'NO',
     '',
+    (imdb_link || trakt_link) ? '<b>Voto</b>' : 'NO',
     imdb_link ? imdb_link : 'NO',
     trakt_link ? trakt_link : 'NO',
-    trailer_link ? trailer_link : 'NO',
     Config.PC_NAME ? `- ${Config.PC_NAME} -` : 'NO'
   ]
 
