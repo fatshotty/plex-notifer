@@ -2,6 +2,7 @@ const Path = require('path');
 const {Config, Trakt} = require('../utils');
 const {PlexQuery} = require('../plex');
 const FS = require('fs');
+const {GetUserRequest, GetPoster} = require('./template_utils');
 
 function extractMediaData(media) {
 
@@ -42,47 +43,7 @@ function extractMediaData(media) {
 
 module.exports = async function({scraped, plexItem}, {Name}) {
 
-  let p_poster = new Promise( (resolve, reject) => {
-    if ( scraped.Poster ) {
-
-      resolve( scraped.Poster );
-
-    } else if ( scraped.Backdrop ) {
-
-      console.log(`[Template ${Name}] use backdrop`);
-      resolve( scraped.Backdrop );
-
-    } else if ( plexItem.thumb ) {
-
-      console.log(`[Template ${Name}] use thumnail ${plexItem.thumb}`);
-      PlexQuery(plexItem.thumb).then( (buff) => {
-        let fn = `./temp_thumb_${Date.now()}.png`;
-        FS.writeFileSync(fn, buff, {encoding: 'binary'});
-        let rs = FS.createReadStream(fn);
-        rs.on('end', () => {
-          FS.unlinkSync(fn);
-        });
-        resolve( rs );
-      });
-
-    }  else if ( plexItem.art ) {
-
-      console.log(`[Template ${Name}] use fanart ${plexItem.art}`);
-      PlexQuery(plexItem.art).then( (buff) => {
-        let fn = `./temp_art_${Date.now()}.png`;
-        FS.writeFileSync(fn, buff, {encoding: 'binary'});
-        let rs = FS.createReadStream(fn);
-        rs.on('end', () => {
-          FS.unlinkSync(fn);
-        });
-        resolve( rs );
-      });
-
-    } else {
-      resolve( '' );
-    }
-
-  });
+  let p_poster = GetPoster({scraped, plexItem}, {Name});
 
   let year = scraped.Year || plexItem.year;
 
@@ -220,7 +181,6 @@ module.exports = async function({scraped, plexItem}, {Name}) {
   ]
 
 
-  const GetUserRequest = require('./template_utils');
   let request = GetUserRequest(scraped.Id, scraped.Title || plexItem.title, scraped.Year || plexItem.year);
 
   if ( request ) {
