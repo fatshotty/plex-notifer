@@ -30,7 +30,7 @@ module.exports.users = function(request) {
 
   let html = `Ci dispiace molto, ma purtroppo la tua richiesta in merito a ${request.MediaTitle} non può essere accettata
 
-🌹
+🌺
 `
 
   return {poster: null, html}

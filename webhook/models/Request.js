@@ -210,7 +210,7 @@ class Request {
     this.Poster = notyData.Poster !== undefined ? notyData.Poster : notyData.poster;
     this.MediaType = notyData.MediaType !== undefined ? notyData.MediaType : notyData.media.media_type;
     this.TmdbId = notyData.TmdbId !== undefined ? notyData.TmdbId : notyData.media.tmdbId;
-    this.ImdbId = notyData.ImdbId !== undefined ? notyData.ImdbId : notyData.media.imdbId;
+    this.ImdbId = notyData.ImdbId !== undefined ? notyData.ImdbId : (notyData.media ? notyData.media.imdbId : '');
     this.TvdbId = notyData.TvdbId !== undefined ? notyData.TvdbId : notyData.media.tvdbId;
 
     this.RequestedByUsername = notyData.RequestedByUsername || notyData.request.requestedBy_username;

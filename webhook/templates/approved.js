@@ -33,7 +33,7 @@ La tua richiesta
 
 È stata <b>approvata</b> e verrà elaborata al più presto
 
-🌹
+🌺
 `
 
   return {poster: null, html}

@@ -7,7 +7,7 @@ module.exports.admin = function( request ) {
   let icon = request.MediaType == 'movie' ? '🎬' : '📺';
   let type = request.MediaType == 'movie' ? 'Film' : 'Serie TV';
 
-  let html = `👍 <b>Contenuto Aggiunto</b>
+  let html = `👍 <b>Contenuto Disponibile</b>
 
 <i>${icon} ${request.MediaTitle}</i>
 
@@ -27,10 +27,10 @@ module.exports.users = function( request ) {
 
 La richiesta è stata elaborata con successo:
 <i>${icon} ${request.MediaTitle}</i>
-è stato aggiunto nel catalogo
+è ora disponibile nel catalogo
 
 Buona visione
-🌹
+🌺
 `
 
   return {poster: null, html}
