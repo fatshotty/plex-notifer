@@ -16,7 +16,7 @@
     "dayjs": "^1.11.1",
     "diskdb": "^0.1.17",
     "dotenv": "^8.2.0",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "imdb-api": "^4.0.3",
     "node-tvdb": "^4.1.0",
     "plex-api": "^5.3.1",
