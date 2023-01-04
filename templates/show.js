@@ -89,8 +89,10 @@ module.exports = async function({scraped, plexItem}, {Name}) {
     //   imdb_link +=  ` Voto: ${vote}`;
     // }
     let vote = plexItem.rating || (scraped.ImdbData && scraped.ImdbData.rating) || scraped.Vote;
-    if ( vote ) {
-      imdb_link =  `${vote.toFixed(1)} - ${imdb_link}`;
+    if ( vote && Number(vote)) {
+      imdb_link =  `${Number(vote).toFixed(1)} - ${imdb_link}`;
+    } else {
+      console.log(`[Template ${Name}] no valid vote for IMDB '${vote}'`, e);
     }
 
 

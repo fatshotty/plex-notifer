@@ -6,3 +6,5 @@ plex-notifier.json
 data/
 temp_thumb_*
 trakt-tokens.json
+
+testPlex*.js
