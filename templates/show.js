@@ -92,7 +92,7 @@ module.exports = async function({scraped, plexItem}, {Name}) {
     if ( vote && Number(vote)) {
       imdb_link =  `${Number(vote).toFixed(1)} - ${imdb_link}`;
     } else {
-      console.log(`[Template ${Name}] no valid vote for IMDB '${vote}'`, e);
+      console.log(`[Template ${Name}] no valid vote for IMDB '${vote}'`);
     }
 
 
