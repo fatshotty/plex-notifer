@@ -7,4 +7,6 @@ data/
 temp_thumb_*
 trakt-tokens.json
 
+temp_poster_*
+
 testPlex*.js

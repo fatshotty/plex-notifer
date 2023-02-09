@@ -6,6 +6,16 @@ const Util = require('util');
 const Stream = require('stream');
 
 
+const IMDB_RatingKey = 'Internet Movie Database';
+
+const Labels = {
+  [IMDB_RatingKey]: 'IMDB',
+  'Rotten Tomatoes': 'RottenTomatoes',
+  'Metacritic': 'Metacritic'
+}
+
+
+
 function GetUserRequest(tmdbID, title, year) {
 
   let loadedrequest;
@@ -131,4 +141,4 @@ async function GetPoster({scraped, plexItem}, {Name}) {
 
 
 
-module.exports = {GetUserRequest, GetPoster}
+module.exports = {GetUserRequest, GetPoster, Labels, IMDB_RatingKey}

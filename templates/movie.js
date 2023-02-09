@@ -2,7 +2,7 @@ const Path = require('path');
 const {Config, Trakt} = require('../utils');
 const {PlexQuery} = require('../plex');
 const FS = require('fs');
-const {GetUserRequest, GetPoster} = require('./template_utils');
+const {GetUserRequest, GetPoster, Labels, IMDB_RatingKey} = require('./template_utils');
 
 function formatBytes(bytes, decimals = 2) {
   if (bytes === 0) return '0 Bytes';
@@ -92,22 +92,36 @@ module.exports = async function({scraped, plexItem}, {Name}) {
     summary = `${summary.slice(0, Config.PLOT_LIMIT)}...`;
   }
 
-  let imdb_link = '';
-  let trakt_link = '';
   let trailer_link = '';
+
+  const votesStr = [];
+
   if ( scraped.ImdbData ) {
-    imdb_link = `<a href="https://www.imdb.com/title/${scraped.ImdbData.imdbid}">IMDB</a>`;
+    let imdb_link = `<a href="https://www.imdb.com/title/${scraped.ImdbData.imdbid}">IMDB</a>`;
     let vote = plexItem.rating || scraped.ImdbData.rating || scraped.Vote;
     if ( vote ) {
-      imdb_link =  `${vote.toFixed(1)} - ${imdb_link}`;
+      votesStr.push(`${vote.toFixed(1)} - ${imdb_link}`);
     }
+
+    if (scraped.ImdbData.ratings) {
+      for ( const rate of scraped.ImdbData.ratings ) {
+        if ( rate.Source == IMDB_RatingKey) continue;
+        try {
+          votesStr.push(`${parseFloat(rate.Value)} - <i>${Labels[rate.Source] || rate.Source}</i>`);
+        } catch(e) {
+          console.log(`cannot add rating: ${rate.Source}-${rate.Value}`, e);
+        }
+      }
+
+    }
+
 
     try {
       let traktMovie = await Trakt.getMovieByID( scraped.ImdbData.imdbid );
 
-      trakt_link = `<a href="https://trakt.tv/movies/${traktMovie.ids.slug}">TRAKT</a>`;
+      let trakt_link = `<a href="https://trakt.tv/movies/${traktMovie.ids.slug}">TRAKT</a>`;
       if ( traktMovie.rating ) {
-        trakt_link =  `${traktMovie.rating.toFixed(1)} - ${trakt_link}`;
+        votesStr.push(`${traktMovie.rating.toFixed(1)} - ${trakt_link}`);
       }
 
       if ( traktMovie.trailer ) {
@@ -150,9 +164,10 @@ module.exports = async function({scraped, plexItem}, {Name}) {
     '',
     summary ? summary : 'NO',
     '',
-    (imdb_link || trakt_link) ? '<b>Voto</b>' : 'NO',
-    imdb_link ? imdb_link : 'NO',
-    trakt_link ? trakt_link : 'NO',
+    (votesStr.length > 0) ? '<b>Voto</b>' : 'NO',
+    // imdb_link ? imdb_link : 'NO',
+    // trakt_link ? trakt_link : 'NO',
+    ...votesStr,
     Config.PC_NAME ? `- ${Config.PC_NAME} -` : 'NO'
   ];
 
