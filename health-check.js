@@ -8,6 +8,7 @@ const Path = require('path');
 const FS = require('fs');
 const Templates = require('./templates/index');
 const ChildProcess = require('child_process');
+const GOT = require('got');
 
 const LIMIT_LOOP = 6;
 const LIMIT_LOOP_SECONDS = 10;
@@ -162,7 +163,10 @@ class HealthCheck extends EventEmitter {
 
 
     this.numberOfLoop = LIMIT_LOOP;
+    this.numberOfLoopEmby = LIMIT_LOOP;
     this._execute();
+
+    this._executeEmby();
 
     this.checkMountReMount(true);
 
@@ -188,6 +192,24 @@ class HealthCheck extends EventEmitter {
       setTimeout(this._execute.bind(this), LIMIT_LOOP_SECONDS * 1000);
 
     });
+  }
+
+  async _executeEmby() {
+
+    try {
+      await GOT('https://redprimerose-embybeta.edge.cbio.us/System/Info/Public')
+    } catch(err) {
+      console.warn(this.JobName, 'error checking Emby', err);
+
+      console.warn(this.JobName, 'remaining', --this.numberOfLoopEmby);
+
+      if ( this.numberOfLoopEmby <= 0 ) {
+        console.error(this.JobName, 'Emby is down, notifying');
+        return TelegramBot.sendError('! Emby seems Down !', err);
+      }
+
+      setTimeout(this._executeEmby.bind(this), LIMIT_LOOP_SECONDS * 1000);
+    }
   }
 
 
