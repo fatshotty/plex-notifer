@@ -144,9 +144,12 @@ class HealthCheck extends EventEmitter {
 
     const folderIsMounted = this.checkMounted();
 
+    console.log(`${this.JobName} cancel User-notification-timer`);
     clearTimeout( this.timerNotifyForUsers );
 
     if ( String(this.userNotificationMountedFolder) !== String(folderIsMounted)  ) {
+
+      console.log(`${this.JobName} start user-notification-timer`);
 
       this.timerNotifyForUsers = setTimeout( () => {
 
