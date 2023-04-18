@@ -16,6 +16,9 @@ const LIMIT_LOOP_SECONDS = 10;
 
 class HealthCheck extends EventEmitter {
 
+  timerNotifyForUsers = null;
+  userNotificationMountedFolder = null;
+
   get RootFolderToWatch() {
     return Path.join(Config.ROOT_MEDIA_FOLDER, '../');
   }
@@ -29,6 +32,7 @@ class HealthCheck extends EventEmitter {
     this.options = options;
 
     this.RootFolderMounted = this.checkMounted();
+    this.userNotificationMountedFolder = this.RootFolderMounted;
 
     this.init();
   }
@@ -106,7 +110,7 @@ class HealthCheck extends EventEmitter {
 
     console.log(this.JobName, '...check mounting fo folder...');
 
-    let folderIsMounted = this.checkMounted();
+    const folderIsMounted = this.checkMounted();
     if ( String(folderIsMounted) == String(this.RootFolderMounted) ) {
       console.log(this.JobName, 'folder IS NOT changed:', folderIsMounted ? 'MOUNTED' : 'UNMOUNTED');
       return;
@@ -116,51 +120,71 @@ class HealthCheck extends EventEmitter {
       this.RootFolderMounted = folderIsMounted;
     }
 
+    this.notifyUserChannel();
+
     console.log(this.JobName, 'folder seems to be changed: now it is', folderIsMounted ? 'MOUNTED' : 'UNMOUNTED');
 
-    let compiledTemplate = '';
-    try {
-      console.log(`${this.JobName} try to notify`);
-      compiledTemplate = Templates[`template_${ folderIsMounted ? 'mounted' : 'umounted'  }`]();
-    } catch( e ) {
-      console.log(`[ERROR pug] ${this.JobName} ${e.message}`, e);
-      if ( TelegramBot.Enabled ) {
-        TelegramBot.sendError( `Pug ${this.JobName} - cannot compile template ${ folderIsMounted ? 'MOUNTED' : 'UMOUNTED'  }`, e.stack);
-        return;
+    if ( TelegramBot.Enabled ) {
+
+      if ( folderIsMounted ) {
+        TelegramBot.sendError(`mount folder OK` , new Error('correctly mounted') );
+      } else {
+        TelegramBot.sendError(`mount folder *FAIL*` , new Error('UNMOUNTED') );
       }
+
+
+    } else {
+      console.log(`**** ${this.JobName} telegram is not enabled`);
     }
 
+  }
 
-    if ( TelegramBot.Enabled ) {
-      if (!admin) {
-        TelegramBot.publishHtml( compiledTemplate );
-        // force admin=true in order to send action into monitor-chat
-        admin = true;
-      }
 
-      if ( admin ) {
+  notifyUserChannel() {
 
-        if ( folderIsMounted ) {
-          TelegramBot.sendError(`mount folder OK` , new Error('correctly mounted') );
-        } else {
-          let title = `mount folder *FAIL*`, msg = 'UNMOUNTED';
+    const folderIsMounted = this.checkMounted();
 
-          let buttons = this.createAdminButtonsForMountUnmount();
+    if ( String(this.userNotificationMountedFolder) !== String(folderIsMounted)  ) {
 
-          TelegramBot.callbackMessage(title, msg, buttons, this.callbackForMountUnmount.bind(this) );
-        }
+      clearTimeout( this.timerNotifyForUsers );
 
-      }
+      this.timerNotifyForUsers = setTimeout( () => {
+
+        // folder not change its state, we need to nitify users
+        this.userNotificationMountedFolder = folderIsMounted;
+
+        console.log(`**** ${this.JobName} Notify users about state of the mounted FOLDER:`, this.userNotificationMountedFolder ? 'MOUNTED' : 'UNMOUNTED');
+
+        // if ( TelegramBot.Enabled ) {
+
+        //   let compiledTemplate = '';
+        //   try {
+        //     console.log(`${this.JobName} try to notify`);
+        //     compiledTemplate = Templates[`template_${ folderIsMounted ? 'mounted' : 'umounted'  }`]();
+        //   } catch( e ) {
+        //     console.log(`[ERROR pug] ${this.JobName} ${e.message}`, e);
+        //     if ( TelegramBot.Enabled ) {
+        //       TelegramBot.sendError( `Pug ${this.JobName} - cannot compile template ${ folderIsMounted ? 'MOUNTED' : 'UMOUNTED'  }`, e.stack);
+        //       return;
+        //     }
+        //   }
+
+        //   TelegramBot.publishHtml( compiledTemplate );
+
+        // } else {
+        //   console.log(`**** ${this.JobName} telegram is not enabled`);
+        // }
+
+      }, 1000 * 60 * 2);
+
     } else {
-      console.log(`**** ${this.JobName} `);
-      console.log( compiledTemplate );
+      console.log( 'Folder has not changed its state, so do not notify users. State is:', folderIsMounted ? 'MOUNTED' : 'UNMOUNTED' );
     }
 
   }
 
 
   execute() {
-
 
     this.numberOfLoop = LIMIT_LOOP;
     this.numberOfLoopEmby = LIMIT_LOOP;
