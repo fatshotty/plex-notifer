@@ -124,7 +124,7 @@ class HealthCheck extends EventEmitter {
 
     console.log(this.JobName, 'folder seems to be changed: now it is', folderIsMounted ? 'MOUNTED' : 'UNMOUNTED');
 
-    if ( TelegramBot.Enabled ) {
+    if ( TelegramBot.BotAdminEnabled ) {
 
       if ( folderIsMounted ) {
         TelegramBot.sendError(`mount folder OK` , new Error('correctly mounted') );
@@ -144,9 +144,9 @@ class HealthCheck extends EventEmitter {
 
     const folderIsMounted = this.checkMounted();
 
-    if ( String(this.userNotificationMountedFolder) !== String(folderIsMounted)  ) {
+    clearTimeout( this.timerNotifyForUsers );
 
-      clearTimeout( this.timerNotifyForUsers );
+    if ( String(this.userNotificationMountedFolder) !== String(folderIsMounted)  ) {
 
       this.timerNotifyForUsers = setTimeout( () => {
 
@@ -155,25 +155,25 @@ class HealthCheck extends EventEmitter {
 
         console.log(`**** ${this.JobName} Notify users about state of the mounted FOLDER:`, this.userNotificationMountedFolder ? 'MOUNTED' : 'UNMOUNTED');
 
-        // if ( TelegramBot.Enabled ) {
+        if ( TelegramBot.Enabled ) {
 
-        //   let compiledTemplate = '';
-        //   try {
-        //     console.log(`${this.JobName} try to notify`);
-        //     compiledTemplate = Templates[`template_${ folderIsMounted ? 'mounted' : 'umounted'  }`]();
-        //   } catch( e ) {
-        //     console.log(`[ERROR pug] ${this.JobName} ${e.message}`, e);
-        //     if ( TelegramBot.Enabled ) {
-        //       TelegramBot.sendError( `Pug ${this.JobName} - cannot compile template ${ folderIsMounted ? 'MOUNTED' : 'UMOUNTED'  }`, e.stack);
-        //       return;
-        //     }
-        //   }
+          let compiledTemplate = '';
+          try {
+            console.log(`${this.JobName} try to notify`);
+            compiledTemplate = Templates[`template_${ folderIsMounted ? 'mounted' : 'umounted'  }`]();
+          } catch( e ) {
+            console.log(`[ERROR pug] ${this.JobName} ${e.message}`, e);
+            if ( TelegramBot.BotAdminEnabled ) {
+              TelegramBot.sendError( `Pug ${this.JobName} - cannot compile template ${ folderIsMounted ? 'MOUNTED' : 'UMOUNTED'  }`, e.stack);
+              return;
+            }
+          }
 
-        //   TelegramBot.publishHtml( compiledTemplate );
+          TelegramBot.publishHtml( compiledTemplate );
 
-        // } else {
-        //   console.log(`**** ${this.JobName} telegram is not enabled`);
-        // }
+        } else {
+          console.log(`**** ${this.JobName} telegram is not enabled`);
+        }
 
       }, 1000 * 60 * 2);
 
@@ -210,7 +210,10 @@ class HealthCheck extends EventEmitter {
 
       if ( this.numberOfLoop <= 0 ) {
         console.error(this.JobName, 'plex is down, notifying');
-        return TelegramBot.sendError('! Plex seems Down !', err);
+        if ( TelegramBot.BotAdminEnabled ) {
+          TelegramBot.sendError('! Plex seems Down !', err);
+        }
+        return;
       }
 
       setTimeout(this._execute.bind(this), LIMIT_LOOP_SECONDS * 1000);
@@ -230,7 +233,10 @@ class HealthCheck extends EventEmitter {
 
       if ( this.numberOfLoopEmby <= 0 ) {
         console.error(this.JobName, 'Emby is down, notifying');
-        return TelegramBot.sendError('! Emby seems Down !', err);
+        if ( TelegramBot.BotAdminEnabled ) {
+          TelegramBot.sendError('! Emby seems Down !', err);
+        }
+        return;
       }
 
       setTimeout(this._executeEmby.bind(this), LIMIT_LOOP_SECONDS * 1000);
