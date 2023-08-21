@@ -13,9 +13,20 @@ if ( !FOLDER ) {
 
 async function loopFolder(fld) {
 
+  console.log('reading dir', fld);
+
   const folders = FS.readdirSync(fld);
 
-  for ( const folder of folders ) {
+  console.log('read', folders.length, 'items');
+
+  for ( const [i, folder] of folders.entries() ) {
+
+    const perc = parseInt(i * 100 / folders.length, 10);
+
+    process.stdout.clearLine();
+    process.stdout.cursorTo(0);
+    process.stdout.write( `${perc}% | ${folder}` );
+
     const fullpath = Path.join(fld, folder);
     const stat = FS.statSync( fullpath );
 
@@ -39,12 +50,17 @@ async function loopFolder(fld) {
       }
 
       if ( tot < 3 ) {
-        console.log( fullpath , 'could be missing required files:', requestedFiles);
+        process.stdout.clearLine();
+        process.stdout.cursorTo(0);
+        console.log( `"${folder}"` , 'could be missing required files:', requestedFiles);
       }
 
 
     }
   }
+  process.stdout.clearLine();
+  process.stdout.cursorTo(0);
+  console.log('');
 }
 
 
