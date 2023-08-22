@@ -26,6 +26,9 @@ const Config = {
 
   REMOUNT_COMMAND: process.env.REMOUT_COMMAND,
 
+  RCLONE_LOG_FILE: process.env.RCLONE_LOG_FILE,
+  RCLONE_LOG_ERROR_KEYS: process.env.RCLONE_LOG_ERROR_KEYS,
+
   TEMP_DIR: Path.normalize(process.env.TEMP_DIR || __dirname),
   TEMPLATE_DIR: Path.join( __dirname, 'templates'),
 
