@@ -9,7 +9,7 @@ const FS = require('fs');
 const Templates = require('./templates/index');
 const ChildProcess = require('child_process');
 const GOT = require('got');
-
+const {Tail} = require('tail');
 const LIMIT_LOOP = 6;
 const LIMIT_LOOP_SECONDS = 10;
 
@@ -18,6 +18,8 @@ class HealthCheck extends EventEmitter {
 
   timerNotifyForUsers = null;
   userNotificationMountedFolder = null;
+
+  tailRclone = null;
 
   get RootFolderToWatch() {
     return Path.join(Config.ROOT_MEDIA_FOLDER, '../');
@@ -84,6 +86,33 @@ class HealthCheck extends EventEmitter {
       console.log(this.JobName, 'watcher is ready on', basepath);
       this.bindWatcherEvents();
     });
+
+    if ( this.tailRclone ) {
+      this.tailRclone.unwatch();
+    }
+
+    if ( TelegramBot.BotAdminEnabled ) {
+      if ( Config.RCLONE_LOG_FILE && Config.RCLONE_LOG_ERROR_KEYS ) {
+
+        try {
+          this.tailRclone = new Tail(Config.RCLONE_LOG_FILE, {follow: true});
+        } catch(e) {
+          console.error('no tail job started', e);
+          TelegramBot.sendError(`RCLONE:` , new Error('no tail-log has started') );
+        }
+
+        this.tailRclone.on("line", function(data) {
+          if ( data.indexOf( Config.RCLONE_LOG_ERROR_KEYS ) > -1 ) {
+            TelegramBot.sendError(`RCLONE:` , new Error(data) );
+          }
+        });
+
+        this.tailRclone.on("error", function(error) {
+          TelegramBot.sendError(`RCLONE-ERR:` , new Error(error) );
+        });
+      }
+
+    }
 
   }
 
