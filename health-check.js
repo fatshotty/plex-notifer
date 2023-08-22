@@ -97,19 +97,23 @@ class HealthCheck extends EventEmitter {
         try {
           this.tailRclone = new Tail(Config.RCLONE_LOG_FILE, {follow: true});
         } catch(e) {
-          console.error('no tail job started', e);
-          TelegramBot.sendError(`RCLONE:` , new Error('no tail-log has started') );
+          console.error('[HEALTH] Rclone: no tail job started', e);
+          TelegramBot.sendError(`[HEALTH]:` , new Error('no tail-log has started') );
         }
 
         this.tailRclone.on("line", function(data) {
           if ( data.indexOf( Config.RCLONE_LOG_ERROR_KEYS ) > -1 ) {
-            TelegramBot.sendError(`RCLONE:` , new Error(data) );
+            console.warn(`[HEALTH] Rclone tail notifier:`, data);
+            TelegramBot.sendError(`[HEALTH]:` , new Error(data) );
           }
         });
 
         this.tailRclone.on("error", function(error) {
-          TelegramBot.sendError(`RCLONE-ERR:` , new Error(error) );
+          console.error(`[HEALTH] Rclone tail error:`, error);
+          TelegramBot.sendError(`[RCLONE]-ERR:` , new Error(error) );
         });
+
+        console.log('[HEALTH] Rclone tail job has correctly started');
       }
 
     }
