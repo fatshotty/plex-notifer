@@ -65,3 +65,4 @@ async function loopFolder(fld) {
 
 
 loopFolder(FOLDER);
+
