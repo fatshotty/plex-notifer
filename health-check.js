@@ -260,7 +260,8 @@ class HealthCheck extends EventEmitter {
   async _executeEmby() {
 
     try {
-      await GOT('https://redprimerose-embybeta.edge.cbio.us/System/Info/Public');
+      // await GOT('https://redprimerose-embybeta.edge.cbio.us/System/Info/Public');
+      await GOT( Config.EMBY_SERVER_LINK );
       console.log(this.JobName, 'Emby is running');
     } catch(err) {
       console.warn(this.JobName, 'error checking Emby', err);

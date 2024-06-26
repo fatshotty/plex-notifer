@@ -59,6 +59,8 @@ const Config = {
 
   PLOT_LIMIT: parseInt(process.env.PLOT_LIMIT || 0, 10),
 
+  EMBY_SERVER_LINK: process.env.EMBY_SERVER_LINK,
+
   ROOT_MEDIA_FOLDER: process.env.ROOT_MEDIA_FOLDER,
 
   HEALT_CHECK_CRON: process.env.HEALT_CHECK_CRON,

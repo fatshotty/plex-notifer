@@ -82,8 +82,8 @@ class PlexLibrary {
   }
 
   remapData( items ) {
-    if ( this.Key == '9'|| this.Key == '13' || this.Key == '27' || this.Key == '35') {
-
+    // if ( this.Key == '9'|| this.Key == '13' || this.Key == '27' || this.Key == '35') {
+    if ( this.Type == 'show' ) {
       // SerieTV
 
       let res = {};
@@ -112,7 +112,8 @@ class PlexLibrary {
       return shows;
 
 
-    } else if ( this.Key == '16' || this.Key == '25' ) {
+    // } else if ( this.Key == '16' || this.Key == '25' ) {
+    } else if ( this.Name == 'On Stage' ) {
       // Video - Videos Collection
 
       let res = {};
