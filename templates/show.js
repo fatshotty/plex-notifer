@@ -66,7 +66,7 @@ module.exports = async function(item, {Name}) {
   }
 
   
-  let summary = item.Overview;
+  let summary = item.Overview || '';
 
   if ( Config.PLOT_LIMIT && summary.length > Config.PLOT_LIMIT ) {
     summary = `${summary.slice(0, Config.PLOT_LIMIT)}...`;
