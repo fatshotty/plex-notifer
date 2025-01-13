@@ -224,9 +224,11 @@ class HealthCheck extends EventEmitter {
 
     this.numberOfLoop = LIMIT_LOOP;
     this.numberOfLoopEmby = LIMIT_LOOP;
-    this._execute();
+    // this._execute();
 
-    this._executeEmby();
+    this._executeEmbys();
+
+    this._executeTGStream();
 
     this.checkMountReMount(true);
 
@@ -257,25 +259,53 @@ class HealthCheck extends EventEmitter {
     });
   }
 
-  async _executeEmby() {
+  async _executeEmbys() {
+    const urls = {
+      stable: Config.PING_EMBY_STABLE,
+      beta: Config.PING_EMBY_BETA
+    };
+
+    for (const serverName in urls) {
+      if ( urls[serverName] ) {
+        await this._executeEmby(serverName, urls[serverName] );
+      }
+    }
+  }
+
+  async _executeEmby(name, url) {
 
     try {
-      await GOT('https://redprimerose-embybeta.edge.cbio.us/System/Info/Public');
-      console.log(this.JobName, 'Emby is running');
+      await GOT(url);
+      console.log(this.JobName, `Emby ${name} is running`);
     } catch(err) {
-      console.warn(this.JobName, 'error checking Emby', err);
+      console.warn(this.JobName, `error checking Emby ${name}`, err);
 
-      console.warn(this.JobName, 'remaining', --this.numberOfLoopEmby);
+      console.warn(this.JobName, `remaining emby ${name}`, --this.numberOfLoopEmby);
 
       if ( this.numberOfLoopEmby <= 0 ) {
-        console.error(this.JobName, 'Emby is down, notifying');
+        console.error(this.JobName, `Emby ${name} is down, notifying`);
         if ( TelegramBot.BotAdminEnabled ) {
-          TelegramBot.sendError('! Emby seems Down !', err);
+          TelegramBot.sendError(`! Emby ${name} seems Down !`, err);
         }
         return;
       }
 
-      setTimeout(this._executeEmby.bind(this), LIMIT_LOOP_SECONDS * 1000);
+      setTimeout(this._executeEmby.bind(this, name, url), LIMIT_LOOP_SECONDS * 1000);
+    }
+  }
+
+
+  async _executeTGStream() {
+    try {
+      await GOT('http://localhost:48080/ping');
+      console.log(this.JobName, `TG-Manager is running`);
+    } catch(err) {
+      console.warn(this.JobName, `error checking TG-Manager`, err);
+
+      if ( TelegramBot.BotAdminEnabled ) {
+        TelegramBot.sendError(`! TG-Manager seems Down !`, err);
+      }
+
     }
   }
 

@@ -72,6 +72,9 @@ const Config = {
 
   HEALT_CHECK_CRON: process.env.HEALT_CHECK_CRON,
 
+  PING_EMBY_STABLE: process.env.PING_EMBY_STABLE,
+  PING_EMBY_BETA: process.env.PING_EMBY_BETA,
+
   ConfigFile: {}
 
 };
