@@ -14,28 +14,27 @@ const SCRAPERS = ['TMDB', 'TVDB'];
 
 class Job extends EventEmitter {
 
+  library = null;
 
   get JobName() {
-    return `[${this.plexlibrary.Name} (${this.plexlibrary.Key})]`;
+    return `[${this.library.Name} (${this.library.Key})]`;
   }
 
-  constructor(options) {
+  constructor(library) {
     super();
-    this.options = options;
+    this.library = library;
     this.init();
   }
 
 
   init() {
 
-    this.plexlibrary = new PlexLibrary( this.options );
-
-    if ( this.options._manual ) {
-      return;
-    }
+    // if ( this.options._manual ) {
+    //   return;
+    // }
 
     this._job = new CronJob(
-      this.options.jobschedule,    // schedule
+      this.library.Schedule,    // schedule
       this.execute.bind(this),     // onTick
       null,                        // onComplete
       false,                       // start
@@ -48,13 +47,13 @@ class Job extends EventEmitter {
     this._job.start();
 
     if ( Config.IMMEDIATE ) {
-      console.log(`[WARN] job ${this.plexlibrary.Name} - ${this.plexlibrary.Key} will start now!`);
+      console.log(`[WARN] job ${this.library.Name} - ${this.library.Key} will start now!`);
       this.execute();
     }
   }
 
 
-  execute() {
+  async execute() {
 
     if ( this.isExecuting ) {
       console.log(`${this.JobName} is already running, skipping`);
@@ -65,125 +64,113 @@ class Job extends EventEmitter {
 
     console.log(`${this.JobName} job is starting...`);
 
-    this.plexlibrary.filterRecentlyAdded().then( (items) => {
+    try {
+
+      const items = await this.library.filterRecentlyAdded()
 
       console.log(`${this.JobName} ${items.length} recently added`);
 
-      return items;
+      await this.executeScrapeAndNotify(items)
 
-    }).then( (items) => {
-
-      return this.executeScrapeAndNotify(items)
-
-    })
-
-    .then( () => {
       this.onComplete(null);
-    })
-
-    .catch( (e) => {
+    } catch (e) {
+      
       this.onComplete(e);
-    });
+    }
 
 
   }
 
 
+  async executeScrapeAndNotify( _items ) {
 
-  executeScrapeAndNotify( _items ) {
+    // GOT items details
+    // scrape via TMDB/TVDB
 
-    return new Promise( (resolve, reject) => {
-      // GOT items details
-      // scrape via TMDB/TVDB
+    // TODO: scrape
 
-      // TODO: scrape
+    // if ( Config.PLEX_LIBRARY_SKIP_SCRAPE.indexOf( this.library.Key) > -1 ) {
+    //   console.log(`${this.JobName} skip scraper`);
+    //   return resolve( _items.map( i => ({plexItem: i}) ) );
+    // }
 
-      if ( Config.PLEX_LIBRARY_SKIP_SCRAPE.indexOf( this.plexlibrary.Key) > -1 ) {
-        console.log(`${this.JobName} skip scraper`);
-        return resolve( _items.map( i => ({plexItem: i}) ) );
-      }
+    // let ps = [];
+    // let _scraper_type = 'movie';
 
-      let ps = [];
-      let _scraper_type = 'movie';
+    // if ( this.library.Type == 'show' ) {
+    //   _scraper_type = 'tv';
+    // }
 
-      if ( this.plexlibrary.Type == 'show' ) {
-        _scraper_type = 'tv';
-      }
+    // for ( let Item of _items ) {
+    //   ps.push( this.scrape( Item, _scraper_type ) );
+    // }
 
-      for ( let plexItem of _items ) {
-        ps.push( this.scrape( plexItem, _scraper_type ) );
-      }
+    // let items = [];
+    // if (ps.length) {
+    //   items = await Promise.all(ps);
+    // }
 
-      ps.length ? Promise.all(ps).then(resolve) : resolve([]) ;
-    })
+    // GOT data scraped
+    // Compile template
+    let ps = [];
 
-    .then( (items) => {
-
-      // GOT data scraped
-      // Compile template
-
-      let ps = [];
-      for ( let item of items ) {
-        let obj = {
-          plexItem: item.plexItem || {},
-          scraped: item.scraped || {}
-        };
-        try {
-          console.log(`${this.JobName} try to notify - ${obj.scraped.Name || obj.scraped.Title || item.plexItem.title}`);
-          let compiledTemplate = Templates[`template_${this.plexlibrary.Key}`](obj, this.plexlibrary);
-          ps.push(  compiledTemplate ); // Promise.resolve({poster: obj.scraped.Poster, html: compiledTemplate}) );
-        } catch( e ) {
-          console.log(`[ERROR pug] ${this.JobName} ${e.message}`, e);
-          if ( TelegramBot.Enabled ) {
-            TelegramBot.sendError( `Pug ${this.JobName} - ${obj.scraped.Name || item.plexItem.title}`, e.stack);
-          }
-        }
-
-      }
-
-      return Promise.all(ps).then( (resp) => {
-        this.emit('gotitems', items);
-        return resp;
-      });
-    })
-
-    .then( (templates) => {
-
-      let ps = [];
-      for ( let template of templates ) {
-
-        // console.log(`**** template ****`);
-        // console.log(template.html);
-
+    for ( let item of _items ) {
+      // let obj = {
+      //   libItem: item.libItem || {},
+      //   scraped: item.scraped || {}
+      // };
+      try {
+        console.log(`${this.JobName} try to notify - '${item.Name}'`);
+        let compiledTemplate = Templates[`template_${this.library.Type}`](item, this.library);
+        ps.push(  compiledTemplate ); // Promise.resolve({poster: obj.scraped.Poster, html: compiledTemplate}) );
+      } catch( e ) {
+        console.log(`[ERROR pug] ${this.JobName} ${e.message}`, e);
         if ( TelegramBot.Enabled ) {
-
-          ps.push( TelegramBot.publish( template.poster, template.html ) );
-
-        } else {
-          ps.push( new Promise( (resolve, reject) => {
-            console.log(`**** ${this.JobName} `);
-            console.log( template.html );
-            resolve();
-          }) )
+          TelegramBot.sendError( `Pug ${this.JobName} - ${obj.scraped.Name || item.libItem.title}`, e.stack);
         }
-
       }
 
+    }
 
-      return Promise.all( ps );
+    const templates = await Promise.all(ps);
+    this.emit('gotitems', _items);
 
-    })
+
+    ps = [];
+    for ( let template of templates ) {
+
+      // console.log(`**** template ****`);
+      // console.log(template.html);
+
+      if ( TelegramBot.Enabled ) {
+
+        ps.push( TelegramBot.publish( template.poster, template.html ) );
+
+      } else {
+        ps.push( new Promise( (resolve, reject) => {
+          console.log(`**** ${this.JobName} `);
+          console.log( template.html );
+          resolve();
+        }) )
+      }
+
+    }
+
+
+    await Promise.all( ps );
   }
 
 
-  scrape(plexItem, type) {
+  scrape(libItem, type) {
 
     let scrapeIndex = -1;
 
-    let {title, year} = this.extractTitleYear(plexItem);
+    // let {title, year} = this.extractTitleYear(libItem);
+    let {Name: title, ProductionYear: year } = libItem;
+    const category = this.library.Name;
 
-    title = title || plexItem.title;
-    year = year || plexItem.year;
+    // title = title || libItem.title;
+    // year = year || libItem.year;
 
     return new Promise( (resolve, reject) => {
 
@@ -191,18 +178,18 @@ class Job extends EventEmitter {
         let scraper = SCRAPERS[ ++scrapeIndex ];
         if ( !scraper ) {
           console.log(`${this.JobName} scraping ${title} (${year}) no more scraper`);
-          return resolve( {scraped: null, plexItem} );
+          return resolve( {scraped: null, libItem} );
         }
-        console.log(`${this.JobName} scraping ${title} (${year}) via ${scraper} (addedAt: ${plexItem.addedAt})`);
+        console.log(`${this.JobName} scraping ${title} (${year}) via ${scraper} (addedAt: ${libItem.DateCreated})`);
         return Scraper[ scraper ].search(title, year, type).then( (scraperdata) => {
           let results = scraperdata.results;
           let first = results[0];
           if ( first ) {
             Scraper[ scraper ].getInfo(first.id, type).then( (klass) => {
-              resolve( {scraped: klass, plexItem} );
+              resolve( {scraped: klass, libItem} );
             }).catch( (err) => {
               console.error( `${this.JobName} - ${title} (${year}) - error during 'getInfo' - ${err.message}` );
-              return resolve( {scraped: null, plexItem} );
+              return resolve( {scraped: null, libItem} );
             });
           } else {
             // force to catch error on 'catch' function
@@ -212,7 +199,7 @@ class Job extends EventEmitter {
           console.error( `${this.JobName} - ${title} (${year}) ${e.message}` );
           if ( type === 'movie' ) {
             // in case of movie: stop looping scraper
-            return resolve( {scraped: null, plexItem} );
+            return resolve( {scraped: null, libItem} );
           } else {
             // in case of tv-shows
             fn_scrape();
@@ -226,9 +213,9 @@ class Job extends EventEmitter {
   }
 
 
-  extractTitleYear(plexItem) {
+  extractTitleYear(libItem) {
 
-    let media = plexItem.Media;
+    let media = libItem.Media;
     let firstMedia = media && media[0];
 
     let parts = firstMedia && firstMedia.Part;

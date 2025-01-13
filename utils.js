@@ -18,6 +18,11 @@ const Config = {
   PLEX_PASSWORD: process.env.PLEX_PASSWORD,
   PLEX_IDENTIFIER: process.env.PLEX_IDENTIFIER,
 
+  EMBY_IP: process.env.EMBY_IP,
+  EMBY_PORT: process.env.EMBY_PORT,
+  EMBY_USER: process.env.EMBY_USER,
+  EMBY_PASSWORD: process.env.EMBY_PASSWORD,
+
   CRON: process.env.CRON,
 
   DATAFOLDER: process.env.DATA_FOLDER || Path.join(__dirname, 'data'),
@@ -50,12 +55,16 @@ const Config = {
   TELEGRAM_LOG_BOT_ID: process.env.TELEGRAM_LOG_BOT_ID,
 
   PLEX_SKIP_LIBRARY: (process.env.PLEX_SKIP_LIBRARY || '').split(',').map(l => l.trim()).filter(l => !!l),
+  EMBY_SKIP_LIBRARY: (process.env.EMBY_SKIP_LIBRARY || '').split(',').map(l => l.trim()).filter(l => !!l),
+
+  EMBY_LIBRARY:  (process.env.EMBY_LIBRARY || '').split(',').map(l => l.trim()).filter(l => !!l),
 
   IMMEDIATE: process.env.IMMEDIATE == 'true',
 
   PC_NAME: process.env.PC_NAME,
 
   PLEX_LIBRARY_SKIP_SCRAPE: (process.env.PLEX_LIBRARY_SKIP_SCRAPE || '').split(',').map( l => l.trim() ).filter( l => !!l),
+  EMBY_LIBRARY_SKIP_SCRAPE: (process.env.EMBY_LIBRARY_SKIP_SCRAPE || '').split(',').map( l => l.trim() ).filter( l => !!l),
 
   PLOT_LIMIT: parseInt(process.env.PLOT_LIMIT || 0, 10),
 
