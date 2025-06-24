@@ -23,5 +23,7 @@ module.exports = {
 
 
   template_mounted: require('./mantainance').mounted,
-  template_umounted: require('./mantainance').unmounted
+  template_umounted: require('./mantainance').unmounted,
+
+  template_new_version: require('./new_version')
 };
